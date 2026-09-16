@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.gitignore
+docs
+*.md
+!AZURE_DEPLOYMENT.md
+.env
+.env.*
+screenshots
+attached_assets
+.conversation

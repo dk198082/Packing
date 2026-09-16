@@ -1,0 +1,344 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Microsoft Entra authentication operations
+  - name: packing
+    description: Packing control board operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /login:
+    get:
+      operationId: login
+      tags: [auth]
+      summary: Start Microsoft sign-in
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to Microsoft Entra ID
+  /auth/callback:
+    get:
+      operationId: authCallback
+      tags: [auth]
+      summary: Complete Microsoft sign-in
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: error
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to the signed-in application
+        "400":
+          description: Invalid authentication response
+        "403":
+          description: User is not authorized for this application
+        "503":
+          description: Authorization service unavailable
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the signed-in user
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Current authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Login required
+  /logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      security:
+        - cookieAuth: []
+      responses:
+        "302":
+          description: Redirect to Microsoft logout
+  /packing-orders:
+    get:
+      operationId: getPackingOrders
+      tags: [packing]
+      summary: Get live packing orders
+      description: Returns normalized live packing orders with shared pack status.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Live packing orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingOrdersResponse"
+        "503":
+          description: Live packing source unavailable
+        "401":
+          description: Login required
+  /pack-status:
+    get:
+      operationId: getPackStatuses
+      tags: [packing]
+      summary: Get shared pack statuses
+      description: Returns shared pack-start timestamps keyed by order ID.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Shared pack statuses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackStatusesResponse"
+        "401":
+          description: Login required
+  /pack-status/{orderId}:
+    put:
+      operationId: updatePackStatus
+      tags: [packing]
+      summary: Update shared pack status
+      description: Sets or resets the shared pack-start timestamp for an order.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackStatusInput"
+      responses:
+        "200":
+          description: Updated shared pack status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackStatus"
+        "400":
+          description: Invalid pack status request
+        "401":
+          description: Login required
+        "403":
+          description: Editor role required
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: packing.sid
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    AuthUser:
+      type: object
+      required:
+        - entraOid
+        - email
+        - displayName
+        - role
+      properties:
+        entraOid:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [viewer, editor]
+    PackingOrder:
+      type: object
+      required:
+        - id
+        - team
+        - salesOrder
+        - isRetailOrder
+        - customer
+        - productDescription
+        - machineModel
+        - confirmedShipDate
+        - requestedShipDate
+        - customerPO
+        - modeOfDelivery
+        - incoterms
+        - namedPlace
+        - carrierForwarder
+        - carrierForwarderDescription
+        - customerCarrierAccount
+        - shippingInstructions
+        - freightInformation
+        - documentStatus
+        - salesperson
+        - country
+        - deliveryCity
+        - deliveryState
+        - customerReference
+        - createdDate
+        - inPackingAt
+        - doNotProcess
+        - doNotProcessKnown
+        - packStartedAt
+      properties:
+        id:
+          type: string
+        team:
+          type: string
+          enum: [PARTS, SYSTEM]
+        salesOrder:
+          type: string
+        isRetailOrder:
+          type: boolean
+        customer:
+          type: string
+        productDescription:
+          type: string
+        machineModel:
+          type: string
+        confirmedShipDate:
+          type: string
+        requestedShipDate:
+          type: string
+        customerPO:
+          type: string
+        modeOfDelivery:
+          type: string
+        incoterms:
+          type: string
+        namedPlace:
+          type: string
+        carrierForwarder:
+          type: string
+        carrierForwarderDescription:
+          type: string
+        customerCarrierAccount:
+          type: string
+        shippingInstructions:
+          type: string
+        freightInformation:
+          type: string
+        documentStatus:
+          type: string
+        salesperson:
+          type: string
+        country:
+          type: string
+        deliveryCity:
+          type: string
+        deliveryState:
+          type: string
+        customerReference:
+          type: string
+        createdDate:
+          type: string
+        inPackingAt:
+          type: string
+          format: date-time
+        doNotProcess:
+          type: boolean
+        doNotProcessKnown:
+          type: boolean
+        packStartedAt:
+          type: ["string", "null"]
+          format: date-time
+    PackingOrdersResponse:
+      type: object
+      required:
+        - source
+        - fetchedAt
+        - skippedRows
+        - orders
+      properties:
+        source:
+          type: string
+          enum: [vw_packing_control_board, salesorderheaderv3staging]
+        fetchedAt:
+          type: string
+        skippedRows:
+          type: number
+          minimum: 0
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingOrder"
+    PackStatus:
+      type: object
+      required:
+        - orderId
+        - packStartedAt
+      properties:
+        orderId:
+          type: string
+        packStartedAt:
+          type: ["string", "null"]
+          format: date-time
+    PackStatusesResponse:
+      type: object
+      required:
+        - statuses
+      properties:
+        statuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackStatus"
+    PackStatusInput:
+      type: object
+      required:
+        - packStartedAt
+      properties:
+        packStartedAt:
+          type: ["string", "null"]
+          format: date-time
+

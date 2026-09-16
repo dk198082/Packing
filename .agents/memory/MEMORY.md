@@ -1,0 +1,4 @@
+- [Shop-floor visual density](packing-control-visual-density.md) — Match the supplied compact 1024×768 industrial console, not a spacious SaaS dashboard.
+- [Azure packing data boundary](azure-packing-data-boundary.md) — Keep ERP server-side/read-only; elapsed packing time follows the confirmed shop schedule.
+- [Operator packing storage](operator-entered-packing-fields.md) — Weight/Box#/Pick IDs stay browser-local; System Pack Started status is shared across users.
+- [Entra and Admin Console access](entra-admin-console-access.md) — Use Entra oid plus fail-closed central authorization; recheck periodically and before shared writes.

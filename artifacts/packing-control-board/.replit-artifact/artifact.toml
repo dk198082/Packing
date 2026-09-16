@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Packing Control Board"
+description = "An operator-focused packing work queue for Parts and System orders, with date-based workload visibility, readiness states, filtering, and order details ready for live ERP or Azure Postgres data."
+version = "1.0.0"
+id = "artifacts/packing-control-board"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19019
+
+[services.development]
+run = "pnpm --filter @workspace/packing-control-board run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/packing-control-board", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/packing-control-board/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19019"
+BASE_PATH = "/"
