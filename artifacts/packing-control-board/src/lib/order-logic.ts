@@ -31,8 +31,12 @@ export function getReadiness(order: Order): Readiness {
   return 'READY';
 }
 
+export function isMissingShipDate(dateString: string): boolean {
+  return !dateString || /^1900-01-01(?:$|[T\s])/.test(dateString.trim());
+}
+
 export function getDateBucket(dateString: string, referenceDate: Date = startOfToday()): DateBucket {
-  if (!dateString) return 'LATER';
+  if (isMissingShipDate(dateString)) return 'OVERDUE';
   const date = parseISO(dateString);
   if (!isValid(date)) return 'LATER';
   
@@ -59,7 +63,7 @@ export function formatShortDate(dateString: string): string {
 }
 
 export function formatCardDate(dateString: string): string {
-  if (!dateString) return '';
+  if (isMissingShipDate(dateString)) return 'No Ship Date';
   const date = parseISO(dateString);
   if (!isValid(date)) return dateString;
   return format(date, 'MMMM d, yyyy');

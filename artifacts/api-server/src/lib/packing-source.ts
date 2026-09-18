@@ -45,6 +45,8 @@ const PACKING_SOURCE = "salesorderheaderv3staging" as const;
 const SALES_ORDER_TYPE = 3;
 const OPEN_ORDER_STATUS = 1;
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const PARTS_POOLS = new Set(["parts", "srv - part", "rma", "used eqt"]);
+const SYSTEM_POOLS = new Set(["system", "exhib"]);
 
 function getSchema() {
   const schema = process.env.AZURE_PG_SCHEMA?.trim();
@@ -64,7 +66,17 @@ function sourceQuery() {
     SELECT *
     FROM ${table}
     WHERE "dataareaid" = 'TOUS'
-      AND "salesorderpoolid" IN ('Parts', 'System')
+      AND (
+        "salesorderpoolid" IN (
+          'Parts',
+          'SRV - Part',
+          'RMA',
+          'Used Eqt',
+          'System',
+          'Exhib'
+        )
+        OR "salesorderpoolid" LIKE 'Repair%'
+      )
       AND "inpacking" = 1
       AND "salestype" = ${SALES_ORDER_TYPE}
       AND "salesorderstatus" = ${OPEN_ORDER_STATUS}
@@ -92,10 +104,18 @@ function asText(value: unknown) {
 function asDate(value: unknown, includeTime = false) {
   if (value === null || value === undefined || value === "") return "";
   if (value instanceof Date) {
+    if (
+      value.getUTCFullYear() === 1900 &&
+      value.getUTCMonth() === 0 &&
+      value.getUTCDate() === 1
+    ) {
+      return "";
+    }
     return includeTime ? value.toISOString() : value.toISOString().slice(0, 10);
   }
   const text = String(value).trim();
   if (!text) return "";
+  if (/^1900-01-01(?:$|[T\s])/.test(text)) return "";
   return includeTime ? text.replace(" ", "T") : text.slice(0, 10);
 }
 
@@ -123,8 +143,8 @@ function asDocumentStatus(value: unknown) {
 
 function parseTeam(value: unknown): PackingOrder["team"] | undefined {
   const pool = asText(value).toLowerCase();
-  if (pool.includes("system")) return "SYSTEM";
-  if (pool.includes("part")) return "PARTS";
+  if (SYSTEM_POOLS.has(pool)) return "SYSTEM";
+  if (PARTS_POOLS.has(pool) || pool.startsWith("repair")) return "PARTS";
   return undefined;
 }
 

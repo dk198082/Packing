@@ -32,7 +32,7 @@ export function FilterBar({ searchTerm, setSearchTerm, viewMode, setViewMode }: 
           onClick={() => setViewMode('CARD')}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm transition-colors ${viewMode === 'CARD' ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <LayoutGrid className="w-3.5 h-3.5" /> Card View
+          <LayoutGrid className="w-3.5 h-3.5" /> Board View
         </button>
         <button
           onClick={() => setViewMode('TABLE')}

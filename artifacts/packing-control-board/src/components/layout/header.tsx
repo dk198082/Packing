@@ -44,6 +44,8 @@ export function Header({
         <div className="flex items-center bg-card border-2 border-primary/70 rounded-md p-1 shadow-[0_0_14px_hsl(var(--primary)/0.12)]">
           <button
             onClick={() => setActiveTeam("PARTS")}
+            title="Pools included: Parts, SRV - Part, Repair*, RMA, Used Eqt"
+            aria-label="Parts tab. Pools included: Parts, SRV - Part, Repair*, RMA, Used Eqt"
             className={`px-9 py-2 rounded-sm text-sm font-bold uppercase transition-colors ${
               activeTeam === "PARTS" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
@@ -53,6 +55,8 @@ export function Header({
           </button>
           <button
             onClick={() => setActiveTeam("SYSTEM")}
+            title="Pools included: System, Exhib"
+            aria-label="System tab. Pools included: System, Exhib"
             className={`px-9 py-2 rounded-sm text-sm font-bold uppercase transition-colors flex items-center gap-2 ${
               activeTeam === "SYSTEM" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
