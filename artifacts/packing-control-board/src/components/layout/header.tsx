@@ -12,6 +12,9 @@ interface HeaderProps {
   viewMode: ViewMode;
   setViewMode: (v: ViewMode) => void;
 }
+const isEmbedded =
+  typeof window !== "undefined" &&
+  window.self !== window.top;
 
 export function Header({
   activeTeam,
@@ -29,9 +32,11 @@ export function Header({
         <div className="w-10 h-10 border border-primary text-primary flex items-center justify-center rounded-sm">
           <Box className="w-5 h-5" />
         </div>
+        {!isEmbedded && (
         <div>
           <h1 className="text-xl font-bold text-foreground font-sans tracking-wide leading-tight">PACKING CONTROL BOARD</h1>
         </div>
+        )}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
@@ -65,6 +70,7 @@ export function Header({
             SYSTEM
           </button>
         </div>
+        {!isEmbedded && (
         <div className="flex items-center gap-2 border-l border-border pl-3">
           <div className="max-w-40 text-right leading-tight">
             <div className="truncate text-[11px] font-semibold text-foreground" title={user.email}>
@@ -82,6 +88,7 @@ export function Header({
             Sign out
           </button>
         </div>
+        )}
       </div>
     </div>
   );

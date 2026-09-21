@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 export function Dashboard() {
   const { user } = useAuth();
+  
   const canEditPackStatus = user.role === 'editor';
   const [nowMs, setNowMs] = useState(() => Date.now());
   const now = new Date(nowMs);
