@@ -174,7 +174,7 @@ export async function createMicrosoftAuthorizationUrl(
     scopes: MICROSOFT_SCOPES,
     redirectUri: getRedirectUri(),
     state,
-    prompt: "select_account",
+    prompt: "none",
   });
 }
 
