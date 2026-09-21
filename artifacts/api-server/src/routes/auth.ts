@@ -263,46 +263,54 @@ export function createAuthRouter(
   // Embedded Authentication Complete
   // ------------------------------------------------------------
   router.get("/embedded-complete", (req, res): void => {
-    const workspaceOrigin =
-      process.env.WORKSPACE_FRONTEND_URL?.trim();
+  const workspaceOrigin =
+    process.env.WORKSPACE_FRONTEND_URL?.trim();
 
-    if (!workspaceOrigin) {
-      res
-        .status(500)
-        .type("text")
-        .send(
-          "WORKSPACE_FRONTEND_URL is not configured.",
-        );
+  if (!workspaceOrigin) {
+    res
+      .status(500)
+      .type("text")
+      .send("WORKSPACE_FRONTEND_URL is not configured.");
 
-      return;
-    }
+    return;
+  }
 
-res.type("html").send(`
+  res.type("html").send(`
 <!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>Authentication complete</title>
 </head>
+
 <body>
 <script>
+(function () {
   const workspaceOrigin = ${JSON.stringify(workspaceOrigin)};
 
   if (window.opener) {
     window.opener.postMessage(
-      { type: "PACKING_CONTROL_AUTH_COMPLETE" },
+      {
+        type: "PACKING_CONTROL_AUTH_COMPLETE"
+      },
       workspaceOrigin
     );
-
-    window.close();
   }
+
+  // Give the Workspace a moment to receive the message,
+  // then close this authentication window.
+  setTimeout(function () {
+    window.close();
+  }, 300);
+})();
 </script>
 
 <p>Authentication complete. You can close this window.</p>
 </body>
 </html>
-    `);
-  });
+  `);
+});
+
 
   // ------------------------------------------------------------
   // Logout
