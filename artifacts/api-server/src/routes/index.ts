@@ -8,7 +8,7 @@ import systemOrderPrioritiesRouter from "./system-order-priorities";
 const router: IRouter = Router();
 
 router.use(healthRouter);
-router.use(authRouter);
+router.use("/auth", authRouter);
 router.use(packingOrdersRouter);
 router.use(packStatusRouter);
 router.use(systemOrderPrioritiesRouter);
