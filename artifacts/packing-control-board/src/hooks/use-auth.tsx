@@ -20,7 +20,11 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getErrorStatus(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
-  if ('status' in error && typeof error.status === 'number') return error.status;
+
+  if ('status' in error && typeof error.status === 'number') {
+    return error.status;
+  }
+
   if (
     'response' in error &&
     typeof error.response === 'object' &&
@@ -30,14 +34,17 @@ function getErrorStatus(error: unknown): number | undefined {
   ) {
     return error.response.status;
   }
+
   return undefined;
 }
 
 function logout(): void {
   const form = document.createElement('form');
+
   form.method = 'POST';
-  form.action = '/api/logout';
+  form.action = '/api/auth/logout';
   form.target = window.self === window.top ? '_self' : '_blank';
+
   document.body.appendChild(form);
   form.submit();
   form.remove();
@@ -49,6 +56,7 @@ function logout(): void {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+
   const currentUserQuery = useGetCurrentUser({
     query: {
       queryKey: getGetCurrentUserQueryKey(),
@@ -61,12 +69,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleUnauthorized = () => {
       const queryKey = getGetCurrentUserQueryKey();
+
       if (queryClient.getQueryData(queryKey)) {
         void queryClient.resetQueries({ queryKey });
       }
     };
+
     window.addEventListener('api:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('api:unauthorized', handleUnauthorized);
+
+    return () => {
+      window.removeEventListener(
+        'api:unauthorized',
+        handleUnauthorized,
+      );
+    };
   }, [queryClient]);
 
   if (currentUserQuery.isPending) {
@@ -79,10 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   if (currentUserQuery.isError) {
-    const isUnauthenticated = getErrorStatus(currentUserQuery.error) === 401;
+    const isUnauthenticated =
+      getErrorStatus(currentUserQuery.error) === 401;
+
     return (
       <LoginShell
-        title={isUnauthenticated ? 'Sign in required' : 'Access check unavailable'}
+        title={
+          isUnauthenticated
+            ? 'Sign in required'
+            : 'Access check unavailable'
+        }
         message={
           isUnauthenticated
             ? 'Use your Microsoft work account to open the Packing Control Board.'
@@ -92,13 +114,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         {isUnauthenticated ? (
           <>
             <a
-              href="/api/login"
+              href="/api/auth/login"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex justify-center rounded-sm bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-primary-foreground hover:bg-primary/90"
             >
               Sign in with Microsoft
             </a>
+
             <button
               type="button"
               onClick={() => void currentUserQuery.refetch()}
@@ -121,7 +144,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user: currentUserQuery.data, logout }}>
+    <AuthContext.Provider
+      value={{
+        user: currentUserQuery.data,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -129,9 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth must be used inside AuthProvider.');
   }
+
   return context;
 }
 
@@ -148,12 +178,24 @@ function LoginShell({
     <main className="flex min-h-[100dvh] items-center justify-center bg-background p-6 text-foreground">
       <section className="w-full max-w-md border border-border bg-card p-7 shadow-2xl">
         <div className="mb-5 h-1 w-16 bg-primary" />
+
         <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">
           Packing Control Board
         </div>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{message}</p>
-        {children && <div className="mt-6 flex flex-col gap-3">{children}</div>}
+
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">
+          {title}
+        </h1>
+
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {message}
+        </p>
+
+        {children && (
+          <div className="mt-6 flex flex-col gap-3">
+            {children}
+          </div>
+        )}
       </section>
     </main>
   );
