@@ -63,6 +63,11 @@ export interface PackingOrder {
   doNotProcessKnown: boolean;
   /** @nullable */
   packStartedAt: string | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  priority: number | null;
 }
 
 export type PackingOrdersResponseSource = typeof PackingOrdersResponseSource[keyof typeof PackingOrdersResponseSource];
@@ -78,6 +83,8 @@ export interface PackingOrdersResponse {
   fetchedAt: string;
   /** @minimum 0 */
   skippedRows: number;
+  /** @nullable */
+  priorityRevision: string | null;
   orders: PackingOrder[];
 }
 
@@ -94,6 +101,28 @@ export interface PackStatusesResponse {
 export interface PackStatusInput {
   /** @nullable */
   packStartedAt: string | null;
+}
+
+export interface SystemOrderPriority {
+  orderId: string;
+  /** @minimum 1 */
+  priority: number;
+}
+
+export interface SystemOrderPrioritiesInput {
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  orderIds: string[];
+  /** @nullable */
+  expectedRevision: string | null;
+}
+
+export interface SystemOrderPrioritiesResponse {
+  priorities: SystemOrderPriority[];
+  /** @nullable */
+  revision: string | null;
 }
 
 export type LoginParams = {

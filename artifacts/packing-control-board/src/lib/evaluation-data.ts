@@ -550,6 +550,7 @@ function normalize(row: EvaluationSourceRow): Order {
     doNotProcess: row.doNotProcess.toLowerCase() === 'yes',
     doNotProcessKnown: true,
     packStartedAt: null,
+    priority: null,
   };
 }
 

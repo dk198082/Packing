@@ -1,4 +1,5 @@
 import pg from "pg";
+export type AzurePoolClient = pg.PoolClient;
 
 const { Pool } = pg;
 

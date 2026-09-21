@@ -64,10 +64,12 @@ export const getPackingOrdersResponseSkippedRowsMin = 0;
 
 
 
+
 export const GetPackingOrdersResponse = zod.object({
   "source": zod.enum(['vw_packing_control_board', 'salesorderheaderv3staging']),
   "fetchedAt": zod.string(),
   "skippedRows": zod.number().min(getPackingOrdersResponseSkippedRowsMin),
+  "priorityRevision": zod.coerce.date().nullable(),
   "orders": zod.array(zod.object({
   "id": zod.string(),
   "team": zod.enum(['PARTS', 'SYSTEM']),
@@ -97,7 +99,8 @@ export const GetPackingOrdersResponse = zod.object({
   "inPackingAt": zod.coerce.date(),
   "doNotProcess": zod.boolean(),
   "doNotProcessKnown": zod.boolean(),
-  "packStartedAt": zod.coerce.date().nullable()
+  "packStartedAt": zod.coerce.date().nullable(),
+  "priority": zod.number().min(1).nullable()
 }))
 })
 
@@ -132,6 +135,31 @@ export const UpdatePackStatusBody = zod.object({
 export const UpdatePackStatusResponse = zod.object({
   "orderId": zod.string(),
   "packStartedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * Replaces the shared priority order for every current System order.
+ * @summary Reorder the current System schedule
+ */
+
+
+
+
+export const UpdateSystemOrderPrioritiesBody = zod.object({
+  "orderIds": zod.array(zod.string().min(1)).min(1),
+  "expectedRevision": zod.coerce.date().nullable()
+})
+
+
+
+
+export const UpdateSystemOrderPrioritiesResponse = zod.object({
+  "priorities": zod.array(zod.object({
+  "orderId": zod.string(),
+  "priority": zod.number().min(1)
+})),
+  "revision": zod.coerce.date().nullable()
 })
 
 

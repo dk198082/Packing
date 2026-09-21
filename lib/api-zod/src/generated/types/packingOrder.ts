@@ -38,4 +38,9 @@ export interface PackingOrder {
   doNotProcessKnown: boolean;
   /** @nullable */
   packStartedAt: Date | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  priority: number | null;
 }

@@ -61,16 +61,24 @@ export function OrderCard({
           >
             IN PACKING [WORK DAYS] {formatWorkDaysInPackingCompact(order.inPackingAt, now)}
           </span>
-          {order.team === 'SYSTEM' && (
-            <span
-              className={`block truncate text-[9px] font-mono font-bold tracking-wide ${packStartedAt ? 'text-ready' : 'text-muted-foreground'}`}
-              title={packStartedAt ? `Pack started ${new Date(packStartedAt).toLocaleString()}` : 'Pack not started'}
-            >
-              {packStartedAt ? `PACK STARTED ${formatPackStartDay(packStartedAt)}` : 'PACK NOT STARTED'}
-            </span>
-          )}
         </div>
       </div>
+
+      {order.team === 'SYSTEM' && (
+        <div className="flex min-w-0 items-center justify-between gap-2 font-mono text-[9px] font-bold uppercase tracking-wider">
+          {order.priority !== null && order.priority <= 5 && (
+            <span className="inline-flex shrink-0 items-center border border-white/60 bg-white/10 px-1.5 py-0.5 text-[11px] font-mono font-bold leading-none text-white">
+              #{order.priority} PRIORITY
+            </span>
+          )}
+          <span
+            className={`ml-auto min-w-0 truncate text-right ${packStartedAt ? 'text-ready' : 'text-muted-foreground'}`}
+            title={packStartedAt ? `Pack started ${new Date(packStartedAt).toLocaleString()}` : 'Pack not started'}
+          >
+            {packStartedAt ? `PACK STARTED ${formatPackStartDay(packStartedAt)}` : 'PACK NOT STARTED'}
+          </span>
+        </div>
+      )}
 
       <div className="flex min-w-0 items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-sm font-sans text-primary font-medium">

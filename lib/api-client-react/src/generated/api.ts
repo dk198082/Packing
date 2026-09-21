@@ -27,7 +27,9 @@ import type {
   PackStatus,
   PackStatusInput,
   PackStatusesResponse,
-  PackingOrdersResponse
+  PackingOrdersResponse,
+  SystemOrderPrioritiesInput,
+  SystemOrderPrioritiesResponse
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -147,7 +149,7 @@ export const getLoginUrl = (params?: LoginParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/auth/login?${stringifiedParams}` : `/api/auth/login`
+  return stringifiedParams.length > 0 ? `/api/login?${stringifiedParams}` : `/api/login`
 }
 
 /**
@@ -170,7 +172,7 @@ export const login = async (params?: LoginParams, options?: Parameters<typeof cu
 
 export const getLoginQueryKey = (params?: LoginParams,) => {
     return [
-    `/api/auth/login`, ...(params ? [params] : [])
+    `/api/login`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -308,7 +310,7 @@ export const getGetCurrentUserUrl = () => {
 
 
 
-  return `/api/auth/me`
+  return `/api/me`
 }
 
 /**
@@ -331,7 +333,7 @@ export const getCurrentUser = async ( options?: Parameters<typeof customFetch>[1
 
 export const getGetCurrentUserQueryKey = () => {
     return [
-    `/api/auth/me`
+    `/api/me`
     ] as const;
     }
 
@@ -385,7 +387,7 @@ export const getLogoutUrl = () => {
 
 
 
-  return `/api/auth/logout`
+  return `/api/logout`
 }
 
 /**
@@ -678,5 +680,77 @@ export const useUpdatePackStatus = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdatePackStatusMutationOptions(options));
+    }
+
+export const getUpdateSystemOrderPrioritiesUrl = () => {
+
+
+
+
+  return `/api/system-order-priorities`
+}
+
+/**
+ * Replaces the shared priority order for every current System order.
+ * @summary Reorder the current System schedule
+ */
+export const updateSystemOrderPriorities = async (systemOrderPrioritiesInput: SystemOrderPrioritiesInput, options?: Parameters<typeof customFetch>[1]): Promise<SystemOrderPrioritiesResponse> => {
+
+  return customFetch<SystemOrderPrioritiesResponse>(getUpdateSystemOrderPrioritiesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(systemOrderPrioritiesInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateSystemOrderPrioritiesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSystemOrderPriorities>>, TError,{data: BodyType<SystemOrderPrioritiesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSystemOrderPriorities>>, TError,{data: BodyType<SystemOrderPrioritiesInput>}, TContext> => {
+
+const mutationKey = ['updateSystemOrderPriorities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSystemOrderPriorities>>, {data: BodyType<SystemOrderPrioritiesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateSystemOrderPriorities(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSystemOrderPrioritiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateSystemOrderPriorities>>>
+    export type UpdateSystemOrderPrioritiesMutationBody = BodyType<SystemOrderPrioritiesInput>
+    export type UpdateSystemOrderPrioritiesMutationError = ErrorType<void>
+
+    /**
+ * @summary Reorder the current System schedule
+ */
+export const useUpdateSystemOrderPriorities = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSystemOrderPriorities>>, TError,{data: BodyType<SystemOrderPrioritiesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSystemOrderPriorities>>,
+        TError,
+        {data: BodyType<SystemOrderPrioritiesInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateSystemOrderPrioritiesMutationOptions(options));
     }
 

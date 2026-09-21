@@ -13,5 +13,7 @@ export interface PackingOrdersResponse {
   fetchedAt: string;
   /** @minimum 0 */
   skippedRows: number;
+  /** @nullable */
+  priorityRevision: Date | null;
   orders: PackingOrder[];
 }

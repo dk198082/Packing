@@ -10,7 +10,6 @@ import { useAuth } from '@/hooks/use-auth';
 
 export function Dashboard() {
   const { user } = useAuth();
-  
   const canEditPackStatus = user.role === 'editor';
   const [nowMs, setNowMs] = useState(() => Date.now());
   const now = new Date(nowMs);
@@ -38,6 +37,10 @@ export function Dashboard() {
     selectedOrderId,
     setSelectedOrderId,
     updatePackStartedAt,
+    reorderSystemOrders,
+    isPrioritySaving,
+    isPrioritySyncing,
+    priorityRevision,
     kpis
   } = useOrders(canEditPackStatus);
 
@@ -84,7 +87,22 @@ export function Dashboard() {
             {viewMode === 'CARD' ? (
               <BoardView orders={orders} onOrderClick={setSelectedOrderId} now={now} />
             ) : (
-              <OrderTable orders={orders} onRowClick={setSelectedOrderId} team={activeTeam} now={now} />
+              <OrderTable
+                orders={orders}
+                onRowClick={setSelectedOrderId}
+                onReorder={reorderSystemOrders}
+                canReorder={
+                  canEditPackStatus &&
+                  !searchTerm.trim() &&
+                  !isPrioritySaving &&
+                  !isPrioritySyncing
+                }
+                isReordering={isPrioritySaving}
+                isPrioritySyncing={isPrioritySyncing}
+                priorityRevision={priorityRevision}
+                team={activeTeam}
+                now={now}
+              />
             )}
           </div>
         )}
