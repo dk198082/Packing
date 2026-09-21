@@ -147,7 +147,7 @@ export const getLoginUrl = (params?: LoginParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/login?${stringifiedParams}` : `/api/login`
+  return stringifiedParams.length > 0 ? `/api/auth/login?${stringifiedParams}` : `/api/auth/login`
 }
 
 /**
@@ -170,7 +170,7 @@ export const login = async (params?: LoginParams, options?: Parameters<typeof cu
 
 export const getLoginQueryKey = (params?: LoginParams,) => {
     return [
-    `/api/login`, ...(params ? [params] : [])
+    `/api/auth/login`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -308,7 +308,7 @@ export const getGetCurrentUserUrl = () => {
 
 
 
-  return `/api/me`
+  return `/api/auth/me`
 }
 
 /**
@@ -331,7 +331,7 @@ export const getCurrentUser = async ( options?: Parameters<typeof customFetch>[1
 
 export const getGetCurrentUserQueryKey = () => {
     return [
-    `/api/me`
+    `/api/auth/me`
     ] as const;
     }
 
@@ -385,7 +385,7 @@ export const getLogoutUrl = () => {
 
 
 
-  return `/api/logout`
+  return `/api/auth/logout`
 }
 
 /**
