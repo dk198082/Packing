@@ -60,13 +60,34 @@ function destroySession(req: Request): Promise<void> {
   });
 }
 
-function clearSessionCookie(res: Response): void {
+function clearSessionCookie(
+  res: Response,
+): void {
+  const isProduction =
+    process.env.NODE_ENV === "production";
+
+  const appOrigin =
+    process.env.APP_ORIGIN?.trim() || "";
+
+  const isLocalHttp =
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(
+      appOrigin,
+    );
+
+  const useSecureCookie =
+    isProduction && !isLocalHttp;
+
   res.clearCookie(sessionCookieName, {
     httpOnly: true,
-    secure: true,
-    sameSite: process.env.NODE_ENV !== "production" ? "none" : "lax",
+
+    secure: useSecureCookie,
+
+    sameSite: useSecureCookie
+      ? "none"
+      : "lax",
   });
 }
+
 
 async function discardSession(req: Request, res: Response): Promise<void> {
   await destroySession(req);
