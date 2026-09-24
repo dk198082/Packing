@@ -15,6 +15,9 @@ import {
 } from "../lib/auth";
 
 import { requireLogin } from "../middlewares/auth";
+import {
+  verifyEmbeddedSsoToken,
+} from "../lib/embedded-sso";
 
 export type AuthRouteDependencies = {
   authenticateMicrosoftCode: typeof authenticateMicrosoftCode;
@@ -80,6 +83,98 @@ export function createAuthRouter(
   dependencies: AuthRouteDependencies = defaultDependencies,
 ): IRouter {
   const router: IRouter = Router();
+
+router.get("/embedded-sso", async (req, res): Promise<void> => {
+  const token =
+    typeof req.query.token === "string"
+      ? req.query.token
+      : "";
+
+  const returnTo =
+    typeof req.query.returnTo === "string"
+      ? req.query.returnTo
+      : "/";
+
+  if (!token) {
+    res.status(400).send("Missing SSO token.");
+    return;
+  }
+
+  const identity = verifyEmbeddedSsoToken(
+    token,
+    "packing-control-board",
+  );
+
+  if (!identity) {
+    res.status(401).send("Invalid or expired SSO token.");
+    return;
+  }
+
+  try {
+    /*
+     * Re-check authorization against Admin Console.
+     * The Workspace proves who the user is.
+     * Admin Console remains the source of application entitlement.
+     */
+    const role = await authorizeWithAdminConsole(
+      identity.sub,
+    );
+
+    await regenerateSession(req);
+
+    req.session.user = {
+      entraOid: identity.sub,
+      email: identity.email,
+      displayName: identity.name,
+      role,
+    };
+
+    req.session.authorizationCheckedAt = Date.now();
+
+    await saveSession(req);
+
+    const safeReturnTo =
+      returnTo.startsWith("/") &&
+      !returnTo.startsWith("//") &&
+      !returnTo.includes("\\")
+        ? returnTo
+        : "/";
+
+    res.redirect(safeReturnTo);
+  } catch (error) {
+    await discardSession(req, res);
+
+    if (error instanceof AccessDeniedError) {
+      res.status(403).send(
+        "You do not have access to Packing Control Board.",
+      );
+      return;
+    }
+
+    if (error instanceof AuthorizationServiceError) {
+      res.status(503).send(
+        "Access could not be verified right now.",
+      );
+      return;
+    }
+
+    req.log.error(
+      {
+        errorName:
+          error instanceof Error ? error.name : "unknown",
+        errorMessage:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+      "Embedded SSO failed",
+    );
+
+    res.status(500).send(
+      "Embedded sign-in could not be completed.",
+    );
+  }
+});  
 
   // ------------------------------------------------------------
   // Microsoft Login
@@ -178,7 +273,7 @@ export function createAuthRouter(
 
       // Embedded login is used when opened from Digital Workspace.
       if (embeddedLogin) {
-        res.redirect("/api/auth/embedded-complete");
+        res.redirect("/");
         return;
       }
 
@@ -258,60 +353,6 @@ export function createAuthRouter(
       GetCurrentUserResponse.parse(req.session.user),
     );
   });
-
-  // ------------------------------------------------------------
-  // Embedded Authentication Complete
-  // ------------------------------------------------------------
-  router.get("/embedded-complete", (req, res): void => {
-  const workspaceOrigin =
-    process.env.WORKSPACE_FRONTEND_URL?.trim();
-
-  if (!workspaceOrigin) {
-    res
-      .status(500)
-      .type("text")
-      .send("WORKSPACE_FRONTEND_URL is not configured.");
-
-    return;
-  }
-
-  res.type("html").send(`
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Authentication complete</title>
-</head>
-
-<body>
-<script>
-(function () {
-  const workspaceOrigin = ${JSON.stringify(workspaceOrigin)};
-
-  if (window.opener) {
-    window.opener.postMessage(
-      {
-        type: "PACKING_CONTROL_AUTH_COMPLETE"
-      },
-      workspaceOrigin
-    );
-  }
-
-  // Give the Workspace a moment to receive the message,
-  // then close this authentication window.
-  setTimeout(function () {
-    window.close();
-  }, 300);
-})();
-</script>
-
-<p>Authentication complete. You can close this window.</p>
-</body>
-</html>
-  `);
-});
-
-
   // ------------------------------------------------------------
   // Logout
   // ------------------------------------------------------------

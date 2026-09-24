@@ -42,15 +42,23 @@ export const sessionMiddleware = session({
 
   rolling: true,
 
+  // cookie: {
+  //   httpOnly: true,
+  //   maxAge: SESSION_MAX_AGE_MS,
+
+  //   secure: !isLocalHttp,
+
+  //   sameSite:
+  //     isDevelopment && !isLocalHttp
+  //       ? "none"
+  //       : "lax",
+  // },
+
   cookie: {
-    httpOnly: true,
-    maxAge: SESSION_MAX_AGE_MS,
-
-    secure: !isLocalHttp,
-
-    sameSite:
-      isDevelopment && !isLocalHttp
-        ? "none"
-        : "lax",
+        httpOnly: true,
+        maxAge: SESSION_MAX_AGE_MS,
+        secure: true,
+        sameSite: "none",
   },
+  
 });
