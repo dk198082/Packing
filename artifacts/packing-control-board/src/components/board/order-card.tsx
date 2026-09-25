@@ -5,7 +5,7 @@ import {
   formatWorkDaysInPackingCompact,
 } from '@/lib/order-logic';
 import { formatPackStartDay } from '@/lib/operator-fields';
-import { AlertTriangle } from 'lucide-react';
+import { HoldIndicator } from './hold-indicator';
 
 export function OrderCard({
   order,
@@ -43,14 +43,7 @@ export function OrderCard({
             </span>
           )}
           {order.doNotProcess && (
-            <span
-              className="inline-flex shrink-0 items-center gap-0.5 border border-destructive/60 bg-destructive/10 px-1 py-0.5 text-[10px] font-mono font-bold leading-none text-destructive"
-              title="Sales order is on hold"
-              aria-label="Sales order is on hold"
-            >
-              <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-              <span>HOLD</span>
-            </span>
+            <HoldIndicator />
           )}
         </div>
         <div className="min-w-0 text-right">

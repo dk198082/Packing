@@ -7,6 +7,7 @@ import {
 } from '@/lib/order-logic';
 import { formatPackStartDay } from '@/lib/operator-fields';
 import { GripVertical } from 'lucide-react';
+import { HoldIndicator } from './hold-indicator';
 
 interface OrderTableProps {
   orders: Order[];
@@ -273,6 +274,9 @@ export function OrderTable({
                 <td className="py-3 px-4 font-bold text-foreground group-hover:text-primary transition-colors">
                   <span className="inline-flex items-center gap-2">
                     <span>{o.id}</span>
+                    {o.doNotProcess && (
+                      <HoldIndicator />
+                    )}
                     {o.isRetailOrder && (
                       <span
                         className="border border-primary/60 bg-primary/10 px-1 py-0.5 text-[10px] font-mono font-bold leading-none text-primary"
