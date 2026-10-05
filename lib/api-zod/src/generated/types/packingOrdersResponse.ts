@@ -13,7 +13,10 @@ export interface PackingOrdersResponse {
   fetchedAt: string;
   /** @minimum 0 */
   skippedRows: number;
-  /** @nullable */
+  /**
+     * Legacy manual schedule revision; null now that priorities are automatic.
+     * @nullable
+     */
   priorityRevision: Date | null;
   orders: PackingOrder[];
 }

@@ -39,7 +39,9 @@ export interface PackingOrder {
   /** @nullable */
   packStartedAt: Date | null;
   /**
+     * Automatic System rank by Ship Date, then numeric Sales Order. Null for Parts and System orders outside the Top 5.
      * @minimum 1
+     * @maximum 5
      * @nullable
      */
   priority: number | null;

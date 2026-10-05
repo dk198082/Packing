@@ -172,8 +172,9 @@ paths:
     put:
       operationId: updateSystemOrderPriorities
       tags: [packing]
-      summary: Reorder the current System schedule
-      description: Replaces the shared priority order for every current System order.
+      summary: Retired manual System priority endpoint
+      description: Manual ranking is no longer supported. Authorized legacy clients receive 410. Priorities are calculated from the current full System queue by Ship Date ascending, then numeric Sales Order ascending.
+      deprecated: true
       security:
         - cookieAuth: []
       requestBody:
@@ -183,20 +184,12 @@ paths:
             schema:
               $ref: "#/components/schemas/SystemOrderPrioritiesInput"
       responses:
-        "200":
-          description: Updated System-order priorities
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SystemOrderPrioritiesResponse"
-        "400":
-          description: Invalid priority order
         "401":
           description: Login required
         "403":
           description: Editor role required
-        "409":
-          description: System schedule changed during reordering
+        "410":
+          description: Manual priorities have been retired; use the automatic priorities returned by packing-orders.
 components:
   securitySchemes:
     cookieAuth:
@@ -326,6 +319,8 @@ components:
         priority:
           type: ["number", "null"]
           minimum: 1
+          maximum: 5
+          description: Automatic System rank by Ship Date, then numeric Sales Order. Null for Parts and System orders outside the Top 5.
     PackingOrdersResponse:
       type: object
       required:
@@ -346,6 +341,7 @@ components:
         priorityRevision:
           type: ["string", "null"]
           format: date-time
+          description: Legacy manual schedule revision; null now that priorities are automatic.
         orders:
           type: array
           items:

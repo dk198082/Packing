@@ -62,6 +62,7 @@ export const LogoutResponse = zod.void()
  */
 export const getPackingOrdersResponseSkippedRowsMin = 0;
 
+export const getPackingOrdersResponseOrdersItemPriorityMax = 5;
 
 
 
@@ -69,7 +70,7 @@ export const GetPackingOrdersResponse = zod.object({
   "source": zod.enum(['vw_packing_control_board', 'salesorderheaderv3staging']),
   "fetchedAt": zod.string(),
   "skippedRows": zod.number().min(getPackingOrdersResponseSkippedRowsMin),
-  "priorityRevision": zod.coerce.date().nullable(),
+  "priorityRevision": zod.coerce.date().nullable().describe('Legacy manual schedule revision; null now that priorities are automatic.'),
   "orders": zod.array(zod.object({
   "id": zod.string(),
   "team": zod.enum(['PARTS', 'SYSTEM']),
@@ -100,7 +101,7 @@ export const GetPackingOrdersResponse = zod.object({
   "doNotProcess": zod.boolean(),
   "doNotProcessKnown": zod.boolean(),
   "packStartedAt": zod.coerce.date().nullable(),
-  "priority": zod.number().min(1).nullable()
+  "priority": zod.number().min(1).max(getPackingOrdersResponseOrdersItemPriorityMax).nullable().describe('Automatic System rank by Ship Date, then numeric Sales Order. Null for Parts and System orders outside the Top 5.')
 }))
 })
 
@@ -139,8 +140,9 @@ export const UpdatePackStatusResponse = zod.object({
 
 
 /**
- * Replaces the shared priority order for every current System order.
- * @summary Reorder the current System schedule
+ * Manual ranking is no longer supported. Authorized legacy clients receive 410. Priorities are calculated from the current full System queue by Ship Date ascending, then numeric Sales Order ascending.
+ * @deprecated
+ * @summary Retired manual System priority endpoint
  */
 
 
@@ -151,15 +153,6 @@ export const UpdateSystemOrderPrioritiesBody = zod.object({
   "expectedRevision": zod.coerce.date().nullable()
 })
 
-
-
-
-export const UpdateSystemOrderPrioritiesResponse = zod.object({
-  "priorities": zod.array(zod.object({
-  "orderId": zod.string(),
-  "priority": zod.number().min(1)
-})),
-  "revision": zod.coerce.date().nullable()
-})
+export const UpdateSystemOrderPrioritiesResponse = zod.void()
 
 

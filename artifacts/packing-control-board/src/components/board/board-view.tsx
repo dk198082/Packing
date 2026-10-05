@@ -1,7 +1,7 @@
 import type { Order, DateBucket } from '@/lib/types';
 import { getDateBucket } from '@/lib/order-logic';
 import { OrderCard } from './order-card';
-import { AlertTriangle, Calendar, Clock, Inbox } from 'lucide-react';
+import { AlertTriangle, Calendar, Inbox } from 'lucide-react';
 
 interface BoardViewProps {
   orders: Order[];
@@ -13,7 +13,6 @@ export function BoardView({ orders, onOrderClick, now }: BoardViewProps) {
   const grouped: Record<DateBucket, Order[]> = {
     OVERDUE: [],
     DUE_TODAY: [],
-    NEXT_3_DAYS: [],
     LATER: []
   };
   
@@ -43,15 +42,6 @@ export function BoardView({ orders, onOrderClick, now }: BoardViewProps) {
          now={now}
       />
       <BoardColumn 
-        title="NEXT 3 DAYS" 
-        count={grouped.NEXT_3_DAYS.length} 
-        icon={<Clock className="w-4 h-4" />}
-        colorClass="text-ready border-ready"
-        orders={grouped.NEXT_3_DAYS}
-         onOrderClick={onOrderClick}
-         now={now}
-      />
-      <BoardColumn 
         title="LATER" 
         count={grouped.LATER.length} 
         icon={<Inbox className="w-4 h-4" />}
@@ -66,7 +56,7 @@ export function BoardView({ orders, onOrderClick, now }: BoardViewProps) {
 
 function BoardColumn({ title, count, icon, colorClass, orders, onOrderClick, now }: any) {
   return (
-    <div className="flex-1 min-w-[170px] max-w-none flex flex-col gap-2 border border-border bg-card/20 rounded-md p-2">
+    <div className="flex-1 basis-0 min-w-[170px] max-w-none flex flex-col gap-2 border border-border bg-card/20 rounded-md p-2">
       <div className={`flex items-center gap-1.5 pb-2 border-b border-border ${colorClass} uppercase font-bold tracking-wider text-xs`}>
         {icon} {title} ({count})
       </div>

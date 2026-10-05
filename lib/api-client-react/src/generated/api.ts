@@ -28,8 +28,7 @@ import type {
   PackStatusInput,
   PackStatusesResponse,
   PackingOrdersResponse,
-  SystemOrderPrioritiesInput,
-  SystemOrderPrioritiesResponse
+  SystemOrderPrioritiesInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -310,7 +309,7 @@ export const getGetCurrentUserUrl = () => {
 
 
 
-  return `/api/auth/me`
+  return `/api/me`
 }
 
 /**
@@ -333,7 +332,7 @@ export const getCurrentUser = async ( options?: Parameters<typeof customFetch>[1
 
 export const getGetCurrentUserQueryKey = () => {
     return [
-    `/api/auth/me`
+    `/api/me`
     ] as const;
     }
 
@@ -387,7 +386,7 @@ export const getLogoutUrl = () => {
 
 
 
-  return `/api/auth/logout`
+  return `/api/logout`
 }
 
 /**
@@ -691,12 +690,13 @@ export const getUpdateSystemOrderPrioritiesUrl = () => {
 }
 
 /**
- * Replaces the shared priority order for every current System order.
- * @summary Reorder the current System schedule
+ * Manual ranking is no longer supported. Authorized legacy clients receive 410. Priorities are calculated from the current full System queue by Ship Date ascending, then numeric Sales Order ascending.
+ * @deprecated
+ * @summary Retired manual System priority endpoint
  */
-export const updateSystemOrderPriorities = async (systemOrderPrioritiesInput: SystemOrderPrioritiesInput, options?: Parameters<typeof customFetch>[1]): Promise<SystemOrderPrioritiesResponse> => {
+export const updateSystemOrderPriorities = async (systemOrderPrioritiesInput: SystemOrderPrioritiesInput, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<SystemOrderPrioritiesResponse>(getUpdateSystemOrderPrioritiesUrl(),
+  return customFetch<unknown>(getUpdateSystemOrderPrioritiesUrl(),
   {
     ...options,
     method: 'PUT',
@@ -741,7 +741,8 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateSystemOrderPrioritiesMutationError = ErrorType<void>
 
     /**
- * @summary Reorder the current System schedule
+ * @deprecated
+ * @summary Retired manual System priority endpoint
  */
 export const useUpdateSystemOrderPriorities = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSystemOrderPriorities>>, TError,{data: BodyType<SystemOrderPrioritiesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

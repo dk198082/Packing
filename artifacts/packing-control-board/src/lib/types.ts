@@ -1,6 +1,6 @@
 export type Team = "PARTS" | "SYSTEM";
 export type Readiness = "READY" | "ATTENTION" | "HOLD";
-export type DateBucket = "OVERDUE" | "DUE_TODAY" | "NEXT_3_DAYS" | "LATER";
+export type DateBucket = "OVERDUE" | "DUE_TODAY" | "LATER";
 export type ViewMode = "CARD" | "TABLE";
 
 export interface Order {

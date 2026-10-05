@@ -22,7 +22,6 @@ export function OrderCard({
   const dateColors = {
     OVERDUE: "text-destructive",
     DUE_TODAY: "text-attention",
-    NEXT_3_DAYS: "text-ready",
     LATER: "text-muted-foreground"
   };
 

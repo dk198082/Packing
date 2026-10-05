@@ -44,7 +44,6 @@ export function getDateBucket(dateString: string, referenceDate: Date = startOfT
   
   if (diff < 0) return 'OVERDUE';
   if (diff === 0) return 'DUE_TODAY';
-  if (diff > 0 && diff <= 3) return 'NEXT_3_DAYS';
   return 'LATER';
 }
 

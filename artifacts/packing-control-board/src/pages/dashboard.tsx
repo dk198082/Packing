@@ -37,10 +37,6 @@ export function Dashboard() {
     selectedOrderId,
     setSelectedOrderId,
     updatePackStartedAt,
-    reorderSystemOrders,
-    isPrioritySaving,
-    isPrioritySyncing,
-    priorityRevision,
     kpis
   } = useOrders(canEditPackStatus);
 
@@ -90,16 +86,6 @@ export function Dashboard() {
               <OrderTable
                 orders={orders}
                 onRowClick={setSelectedOrderId}
-                onReorder={reorderSystemOrders}
-                canReorder={
-                  canEditPackStatus &&
-                  !searchTerm.trim() &&
-                  !isPrioritySaving &&
-                  !isPrioritySyncing
-                }
-                isReordering={isPrioritySaving}
-                isPrioritySyncing={isPrioritySyncing}
-                priorityRevision={priorityRevision}
                 team={activeTeam}
                 now={now}
               />

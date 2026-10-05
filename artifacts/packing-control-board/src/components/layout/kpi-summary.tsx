@@ -1,16 +1,15 @@
-import { AlertTriangle, Calendar, Clock, PauseCircle, Package } from 'lucide-react';
+import { AlertTriangle, Calendar, PauseCircle, Package } from 'lucide-react';
 
 interface KPIs {
   total: number;
   overdue: number;
   dueToday: number;
-  next3Days: number;
   onHold: number;
 }
 
 export function KpiSummary({ kpis }: { kpis: KPIs }) {
   return (
-    <div className="grid grid-cols-5 gap-2.5 mt-2 mb-2">
+    <div className="grid grid-cols-4 gap-2.5 mt-2 mb-2">
       <KpiCard 
         icon={<Package className="w-6 h-6 text-primary" />}
         value={kpis.total}
@@ -27,12 +26,6 @@ export function KpiSummary({ kpis }: { kpis: KPIs }) {
         icon={<Calendar className="w-6 h-6 text-attention" />}
         value={kpis.dueToday}
         label="DUE TODAY"
-        borderColor="border-border"
-      />
-      <KpiCard 
-        icon={<Clock className="w-6 h-6 text-ready" />}
-        value={kpis.next3Days}
-        label="NEXT 3 DAYS"
         borderColor="border-border"
       />
       <KpiCard 
