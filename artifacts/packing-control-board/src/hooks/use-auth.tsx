@@ -13,6 +13,7 @@ import {
 
 type AuthContextValue = {
   user: AuthUser;
+  entraOid: string;
   logout: () => void;
 };
 
@@ -36,7 +37,7 @@ function getErrorStatus(error: unknown): number | undefined {
 function logout(): void {
   const form = document.createElement('form');
   form.method = 'POST';
-  form.action = '/api/auth/logout';
+  form.action = '/api/logout';
   form.target = window.self === window.top ? '_self' : '_blank';
   document.body.appendChild(form);
   form.submit();
@@ -92,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         {isUnauthenticated ? (
           <>
             <a
-              href="/api/auth/login"
+              href="/api/login"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex justify-center rounded-sm bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-primary-foreground hover:bg-primary/90"
@@ -121,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user: currentUserQuery.data, logout }}>
+    <AuthContext.Provider
+      value={{ user: currentUserQuery.data, entraOid: currentUserQuery.data.entraOid, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

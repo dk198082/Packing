@@ -271,7 +271,8 @@ export async function printDymo30336Labels(
   }
 
   try {
-    const qrCodeValue = pickIds.join(',');
+    // One scanner Enter terminator after the complete comma-separated IPR list.
+    const qrCodeValue = `${pickIds.join(',')}\r`;
     const labels = await Promise.all(
       boxes.map(async (box) => ({
         box,
