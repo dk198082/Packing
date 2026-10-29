@@ -21,6 +21,10 @@ export function Header({
   viewMode,
   setViewMode,
 }: HeaderProps) {
+  const isEmbedded =
+  typeof window !== "undefined" &&
+  (window.self !== window.top ||
+    new URLSearchParams(window.location.search).get("embedded") === "1");
   const { user, logout } = useAuth();
 
   return (
@@ -65,23 +69,30 @@ export function Header({
             SYSTEM
           </button>
         </div>
-        <div className="flex items-center gap-2 border-l border-border pl-3">
-          <div className="max-w-40 text-right leading-tight">
-            <div className="truncate text-[11px] font-semibold text-foreground" title={user.email}>
-              {user.displayName}
+        {!isEmbedded && (
+            <div className="flex items-center gap-2 border-l border-border pl-3">
+              <div className="max-w-40 text-right leading-tight">
+                <div
+                  className="truncate text-[11px] font-semibold text-foreground"
+                  title={user.email}
+                >
+                  {user.displayName}
+                </div>
+
+                <div className="text-[9px] font-bold uppercase tracking-wider text-primary">
+                  {user.role}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-sm border border-border px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground hover:border-primary hover:text-primary"
+              >
+                Sign out
+              </button>
             </div>
-            <div className="text-[9px] font-bold uppercase tracking-wider text-primary">
-              {user.role}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-sm border border-border px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground hover:border-primary hover:text-primary"
-          >
-            Sign out
-          </button>
-        </div>
+          )}
       </div>
     </div>
   );
