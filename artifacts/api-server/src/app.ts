@@ -6,6 +6,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { sessionMiddleware } from "./lib/session";
 
+
 const app: Express = express();
 app.set("trust proxy", 1);
 
@@ -52,8 +53,7 @@ if (staticDir) {
     );
   }
   app.use(express.static(resolvedStaticDir));
-  // SPA fallback: any non-API, non-file GET request returns index.html so
-  // client-side routing can handle the path. Registered after "/api" so API
+  // SPA fallback: any non-API, non-file GET request returns index.html so API
   // routes/404s above are never shadowed by this. Express 5 still supports
   // regex routes (unlike the removed string wildcard "*" syntax), so this
   // pattern is safe on the Express 5 this app uses.
