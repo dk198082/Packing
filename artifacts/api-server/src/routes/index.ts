@@ -9,6 +9,7 @@ import packingMessagesRouter from "./packing-messages";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
 router.use("/auth", authRouter);
 router.use(packingOrdersRouter);
 router.use(packStatusRouter);

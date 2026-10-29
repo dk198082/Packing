@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOrders } from '@/store/use-orders';
 import { Header } from '@/components/layout/header';
-import { KpiSummary } from '@/components/layout/kpi-summary';
+import { MessageBoard } from '@/components/messages/message-board';
 import { BoardView } from '@/components/board/board-view';
 import { OrderTable } from '@/components/board/order-table';
 import { OrderDrawer } from '@/components/board/order-drawer';
@@ -36,8 +36,7 @@ export function Dashboard() {
     setViewMode,
     selectedOrderId,
     setSelectedOrderId,
-    updatePackStartedAt,
-    kpis
+    updatePackStartedAt
   } = useOrders(canEditPackStatus);
 
   const selectedOrder = rawOrders.find(o => o.id === selectedOrderId) || null;
@@ -53,7 +52,7 @@ export function Dashboard() {
         setViewMode={setViewMode}
       />
       
-      <KpiSummary kpis={kpis} />
+      <MessageBoard />
       
       <div className="flex-1 flex flex-col min-h-0">
         {loadError && rawOrders.length > 0 && (
