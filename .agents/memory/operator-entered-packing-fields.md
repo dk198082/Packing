@@ -19,3 +19,11 @@ requests that separate storage-boundary change.
 Box # dropdown list is a fixed set of ~17 known box IDs with inconsistent formatting (e.g.
 "BOX-13-SHI80501" lacks a dash before the suffix). Sort/parse logic must extract just the numeric
 value after "BOX-" via regex, not assume a fixed string pattern.
+
+## Label scan termination
+
+Preserve multiple IPR numbers as a comma-separated QR payload, with one carriage return after the entire list—not after each IPR. Keep the human-readable label text unchanged.
+
+**Why:** The user explicitly chose one Enter at the end of the entire scan. Whether the encoded carriage return sends an Enter keypress depends on scanner configuration.
+
+**How to apply:** Keep this single-terminator behavior when changing QR generation or label formatting; do not introduce per-IPR Enter commands or a second trailing newline.

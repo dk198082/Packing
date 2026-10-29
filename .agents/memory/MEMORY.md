@@ -1,4 +1,7 @@
+- [OpenAPI codegen compatibility](openapi-codegen-compatibility.md) — UUID format emits Zod 4 helpers against the Zod 3 runtime; use a string pattern until versions align.
+- [Shared packing messages](message-board-policy.md) — One board across Parts/System; Read/Write users post, other signed-in users can OK with names and timestamps.
 - [Shop-floor visual density](packing-control-visual-density.md) — Match the supplied compact 1024×768 industrial console, not a spacious SaaS dashboard.
 - [Azure packing data boundary](azure-packing-data-boundary.md) — Keep ERP server-side/read-only; elapsed packing time follows the confirmed shop schedule.
 - [Operator packing storage](operator-entered-packing-fields.md) — Weight/Box#/Pick IDs stay browser-local; System Pack Started status is shared across users.
 - [Entra and Admin Console access](entra-admin-console-access.md) — Use Entra oid plus fail-closed central authorization; recheck periodically and before shared writes.
+- [System priority policy](system-priority-policy.md) — Automatic Top 5 by Ship Date then Sales Order; renumber when queue changes, never from search results.

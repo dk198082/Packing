@@ -140,6 +140,83 @@ export const UpdatePackStatusResponse = zod.object({
 
 
 /**
+ * @summary List shared messages until seven days after their first OK
+ */
+export const getPackingMessagesResponseMessagesItemIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const GetPackingMessagesResponse = zod.object({
+  "messages": zod.array(zod.object({
+  "id": zod.string().regex(getPackingMessagesResponseMessagesItemIdRegExp),
+  "content": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "acknowledgments": zod.array(zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "acknowledgedAt": zod.coerce.date()
+}))
+}))
+})
+
+
+/**
+ * @summary Post a shared message as a Read/Write user
+ */
+export const createPackingMessageBodyContentMax = 200;
+
+
+
+export const CreatePackingMessageBody = zod.object({
+  "content": zod.string().min(1).max(createPackingMessageBodyContentMax)
+})
+
+export const createPackingMessageResponseIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const CreatePackingMessageResponse = zod.object({
+  "id": zod.string().regex(createPackingMessageResponseIdRegExp),
+  "content": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "acknowledgments": zod.array(zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "acknowledgedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Acknowledge a message with OK; Read/Write users may also OK their own
+ */
+export const acknowledgePackingMessagePathMessageIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const AcknowledgePackingMessageParams = zod.object({
+  "messageId": zod.coerce.string().regex(acknowledgePackingMessagePathMessageIdRegExp)
+})
+
+export const acknowledgePackingMessageResponseIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const AcknowledgePackingMessageResponse = zod.object({
+  "id": zod.string().regex(acknowledgePackingMessageResponseIdRegExp),
+  "content": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "acknowledgments": zod.array(zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "acknowledgedAt": zod.coerce.date()
+}))
+})
+
+
+/**
  * Manual ranking is no longer supported. Authorized legacy clients receive 410. Priorities are calculated from the current full System queue by Ship Date ascending, then numeric Sales Order ascending.
  * @deprecated
  * @summary Retired manual System priority endpoint

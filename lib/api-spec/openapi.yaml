@@ -168,6 +168,82 @@ paths:
           description: Login required
         "403":
           description: Editor role required
+  /messages:
+    get:
+      operationId: getPackingMessages
+      tags: [messages]
+      summary: List shared messages until seven days after their first OK
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Messages, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingMessagesResponse"
+        "401":
+          description: Login required
+        "503":
+          description: Message board unavailable
+    post:
+      operationId: createPackingMessage
+      tags: [messages]
+      summary: Post a shared message as a Read/Write user
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackingMessageInput"
+      responses:
+        "201":
+          description: Saved message with server-owned author and timestamp
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingMessage"
+        "400":
+          description: Invalid message
+        "401":
+          description: Login required
+        "403":
+          description: Read/Write access required
+        "503":
+          description: Message board unavailable
+  /messages/{messageId}/acknowledgments:
+    post:
+      operationId: acknowledgePackingMessage
+      tags: [messages]
+      summary: Acknowledge a message with OK; Read/Write users may also OK their own
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+      responses:
+        "200":
+          description: Message with acknowledgments; repeat OK preserves its original timestamp
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingMessage"
+        "400":
+          description: Invalid message identifier
+        "401":
+          description: Login required
+        "403":
+          description: Access denied or a Read user attempting to acknowledge their own message
+        "404":
+          description: Message not found
+        "503":
+          description: Message board unavailable
   /system-order-priorities:
     put:
       operationId: updateSystemOrderPriorities
@@ -197,6 +273,53 @@ components:
       in: cookie
       name: packing.sid
   schemas:
+    PackingMessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 200
+    PackingMessageAcknowledgment:
+      type: object
+      required: [userId, displayName, acknowledgedAt]
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        acknowledgedAt:
+          type: string
+          format: date-time
+    PackingMessage:
+      type: object
+      required: [id, content, authorId, authorName, createdAt, acknowledgments]
+      properties:
+        id:
+          type: string
+          pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        content:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        acknowledgments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingMessageAcknowledgment"
+    PackingMessagesResponse:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingMessage"
     HealthStatus:
       type: object
       properties:

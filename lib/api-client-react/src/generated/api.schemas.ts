@@ -5,6 +5,34 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface PackingMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  content: string;
+}
+
+export interface PackingMessageAcknowledgment {
+  userId: string;
+  displayName: string;
+  acknowledgedAt: string;
+}
+
+export interface PackingMessage {
+  /** @pattern ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ */
+  id: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  acknowledgments: PackingMessageAcknowledgment[];
+}
+
+export interface PackingMessagesResponse {
+  messages: PackingMessage[];
+}
+
 export interface HealthStatus {
   status: string;
 }

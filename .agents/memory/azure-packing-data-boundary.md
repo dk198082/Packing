@@ -19,7 +19,7 @@ The live packing endpoint is intentionally unauthenticated at the owner's reques
 
 ## Packing-source scope
 
-The board reads the D365 sales-order staging table directly with a server-side, read-only query. Eligible rows require company `TOUS`, exact Parts/System pools, `In Packing = 1`, sales type `3` (Sales Order), and open sales status `1`.
+The board reads the D365 sales-order staging table directly with a server-side, read-only query. Eligible rows require company `TOUS`, an approved packing pool, `In Packing = 1`, sales type `3` (Sales Order), and open sales status `1`. Parts includes `Parts`, `SRV - Part`, `Repair*`, `RMA`, and `Used Eqt`; System includes `System` and `Exhib`.
 
 **Why:** The upstream packing view filters sales type `0`, which is Journal rather than Sales Order. Direct staging reads preserve the Azure read-only boundary while applying the owner-confirmed Sales Order criterion.
 

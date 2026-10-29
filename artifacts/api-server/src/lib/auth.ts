@@ -1,6 +1,8 @@
-import "dotenv/config";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { ConfidentialClientApplication } from "@azure/msal-node";
+import connectPgSimple from "connect-pg-simple";
+import session from "express-session";
+import { getAzurePool, getAzureSchemaName } from "@workspace/db/azure";
 import { z } from "zod";
 
 export type ApplicationRole = "viewer" | "editor";
@@ -11,7 +13,6 @@ export type AuthenticatedUser = {
   displayName: string;
   role: ApplicationRole;
 };
-const AZURE_PG_SCHEMA = process.env.AZURE_PG_SCHEMA || "d365fo";
 
 const MICROSOFT_SCOPES = ["openid", "profile", "email"];
 const SESSION_COOKIE_NAME = "packing.sid";
@@ -83,25 +84,20 @@ function getAdminConsoleEditorRoles(): Set<string> {
 }
 
 function getAdminConsoleAccessUrl(entraOid: string): URL {
-        const baseUrl = new URL(requiredEnv("ADMIN_CONSOLE_URL"));
-
-        const isLocalhost =
-          baseUrl.hostname === "localhost" ||
-          baseUrl.hostname === "127.0.0.1" ||
-          baseUrl.hostname === "::1";
-
-        if (baseUrl.protocol !== "https:" && !isLocalhost) {
-          throw new AuthorizationServiceError(
-            "ADMIN_CONSOLE_URL must use HTTPS.",
-          );
-        }
-
-        const url = new URL("/api/access-check", baseUrl);
-
-        url.searchParams.set("entraObjectId", entraOid);
-        url.searchParams.set("app", getAdminConsoleAppName());
-
-        return url;
+  const baseUrl = new URL(requiredEnv("ADMIN_CONSOLE_URL"));
+  const isLocalhost =
+    baseUrl.hostname === "localhost" ||
+    baseUrl.hostname === "127.0.0.1" ||
+    baseUrl.hostname === "::1";
+  if (baseUrl.protocol !== "https:" && !isLocalhost) {
+    throw new AuthorizationServiceError("ADMIN_CONSOLE_URL must use HTTPS.");
+  }
+  baseUrl.pathname = `${baseUrl.pathname.replace(/\/+$/, "")}/api/access-check`;
+  baseUrl.search = "";
+  baseUrl.hash = "";
+  baseUrl.searchParams.set("entraObjectId", entraOid);
+  baseUrl.searchParams.set("app", getAdminConsoleAppName());
+  return baseUrl;
 }
 
 let msalClient: ConfidentialClientApplication | undefined;
@@ -174,6 +170,7 @@ export async function createMicrosoftAuthorizationUrl(
     scopes: MICROSOFT_SCOPES,
     redirectUri: getRedirectUri(),
     state,
+    prompt: "select_account",
   });
 }
 
@@ -202,17 +199,13 @@ export async function authorizeWithAdminConsole(
   entraOid: string,
 ): Promise<ApplicationRole> {
   const controller = new AbortController();
-
   const timeout = setTimeout(
     () => controller.abort(),
     ADMIN_CONSOLE_TIMEOUT_MS,
   );
 
   try {
-    
-    const accessUrl = getAdminConsoleAccessUrl(entraOid);
-
-    const response = await fetch(accessUrl, {
+    const response = await fetch(getAdminConsoleAccessUrl(entraOid), {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -223,49 +216,28 @@ export async function authorizeWithAdminConsole(
     });
 
     if (!response.ok) {
-      const responseText = await response.text().catch(() => "");
-
-      console.error("Admin Console authorization failed:", {
-        status: response.status,
-        statusText: response.statusText,
-        url: accessUrl.origin + accessUrl.pathname,
-        responseBody: responseText.slice(0, 500),
-      });
-
-      throw new AuthorizationServiceError(
-        `Admin Console returned HTTP ${response.status}.`,
-      );
+      throw new AuthorizationServiceError();
     }
 
     let payload: unknown;
-
     try {
       payload = await response.json();
     } catch {
-      throw new AuthorizationServiceError(
-        "Admin Console returned invalid JSON.",
-      );
+      throw new AuthorizationServiceError();
     }
 
     const parsed = adminConsoleResponseSchema.safeParse(payload);
-
     if (!parsed.success) {
-      console.error("Invalid Admin Console response:", parsed.error.flatten());
-
-      throw new AuthorizationServiceError(
-        "Admin Console returned an invalid authorization response.",
-      );
+      throw new AuthorizationServiceError();
     }
 
     if (!parsed.data.allowed) {
       throw new AccessDeniedError(
-        parsed.data.reason ||
-          "User does not have access to this application.",
+        parsed.data.reason || "User does not have access to this application.",
       );
     }
 
     const editorRoles = getAdminConsoleEditorRoles();
-
     const isReadWrite = parsed.data.roles.some((role) =>
       editorRoles.has(role.trim().toLowerCase()),
     );
@@ -278,19 +250,33 @@ export async function authorizeWithAdminConsole(
     ) {
       throw error;
     }
-
-    console.error("Admin Console request error:", {
-      errorName: error instanceof Error ? error.name : "unknown",
-      errorMessage: error instanceof Error ? error.message : String(error),
-    });
-
     throw new AuthorizationServiceError();
   } finally {
     clearTimeout(timeout);
   }
 }
 
-
+const PgSessionStore = connectPgSimple(session);
 const isDevelopment = process.env.NODE_ENV !== "production";
+
+export const sessionMiddleware = session({
+  name: SESSION_COOKIE_NAME,
+  store: new PgSessionStore({
+    pool: getAzurePool(),
+    schemaName: getAzureSchemaName(),
+    tableName: "sessions",
+    createTableIfMissing: false,
+  }),
+  secret: requiredEnv("SESSION_SECRET"),
+  resave: false,
+  saveUninitialized: false,
+  rolling: true,
+  cookie: {
+    httpOnly: true,
+    maxAge: SESSION_MAX_AGE_MS,
+    secure: isDevelopment ? true : "auto",
+    sameSite: isDevelopment ? "none" : "lax",
+  },
+});
 
 export const sessionCookieName = SESSION_COOKIE_NAME;

@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "UBc_-dYZgdIK8S-pToKbG"
+uri = "file://reports/packing-control-board-postgres-data-model.pdf"
+type = "pdf"
+title = "Packing Control Board — PostgreSQL Data Model"
+description = "12-page PDF listing all four PostgreSQL tables used by the application, all 216 columns, constraints, indexes, access patterns, logical relationships, and the confirmed absence of used views."
+logical_id = "83919dab-1a1d-4161-8b5a-6db07e670bd0"
+content_hash = "sha256:17293d8efc34aea53869991dff5fb5f6aff879b767fca8cb45aeeaa8ff8a797c"
+size = 520880
+mtime_ms = 1789703173075
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:c93c079a-1f7e-49f5-84a4-17f464bac76a/83919dab-1a1d-4161-8b5a-6db07e670bd0/84ed76ba-9f95-4f18-a67e-0b1cbbb91684"
+storage_version_token = "1789703183738090"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "nP1rjDbl7lvTJX3zWiJlE"
+uri = "file://UX-STANDARDS.md"
+type = "text"
+title = "Packing Control Board UX Standards"
+description = "Evidence-based UX standards discovery and consolidation document, including classifications, reusable components, design tokens, inconsistencies, application-specific decisions, and the current project file tree."
+logical_id = "3bce982e-76c1-4085-8fed-df40758c039c"
+content_hash = "sha256:86edd5fdfcc6319271c51b29db7073dbf55eb706f5f8b8536bb3c8c5266a9021"
+size = 45469
+mtime_ms = 1790189099751
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:c93c079a-1f7e-49f5-84a4-17f464bac76a/3bce982e-76c1-4085-8fed-df40758c039c/cb85102c-9340-4e35-86c1-0978a3f689b7"
+storage_version_token = "1790189152285554"
+content_type = "text/markdown"
