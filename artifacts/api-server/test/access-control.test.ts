@@ -9,18 +9,6 @@ process.env.SESSION_SECRET = "test-session-secret";
 process.env.TENANT_ID = "test-tenant";
 process.env.CLIENT_ID = "test-client";
 process.env.CLIENT_SECRET = "test-secret";
-// Importing lib/auth.ts also defines `sessionMiddleware` at module scope,
-// which eagerly calls getAzurePool() (lib/db/src/azure.ts) as a side
-// effect of evaluating the module — not lazily, on first request. These
-// fake values only need to satisfy that constructor; no real connection is
-// ever attempted in this test file, since nothing here exercises the
-// session store itself.
-process.env.AZURE_PG_HOST = "localhost";
-process.env.AZURE_PG_PORT = "5432";
-process.env.AZURE_PG_DATABASE = "test-db";
-process.env.AZURE_PG_SP_USER = "test-user";
-process.env.AZURE_PG_PASSWORD = "test-password";
-process.env.AZURE_PG_SCHEMA = "test_schema";
 
 type AuthModule = typeof import("../src/lib/auth");
 type MiddlewareModule = typeof import("../src/middlewares/auth");

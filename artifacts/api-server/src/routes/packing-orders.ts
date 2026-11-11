@@ -14,8 +14,8 @@ router.get("/packing-orders", requireLogin, async (req, res) => {
       getPackingOrders(),
       getSharedPackStatuses(),
     ]);
-    const packStartedAtByOrderId = new Map(
-      statuses.map((status) => [status.orderId, status.packStartedAt]),
+    const statusByOrderId = new Map(
+      statuses.map((status) => [status.orderId, status]),
     );
     const inPackingAtByOrderId = await getOrCreateInPackingEntryTimes(
       result.orders.map((order) => ({
@@ -30,7 +30,8 @@ router.get("/packing-orders", requireLogin, async (req, res) => {
       orders: result.orders.map(({ sourceModifiedAt: _sourceModifiedAt, ...order }) => ({
         ...order,
         inPackingAt: inPackingAtByOrderId.get(order.id) ?? result.fetchedAt,
-        packStartedAt: packStartedAtByOrderId.get(order.id) ?? null,
+        packStartedAt: statusByOrderId.get(order.id)?.packStartedAt ?? null,
+        packedAt: statusByOrderId.get(order.id)?.packedAt ?? null,
         priority:
           order.team === "SYSTEM"
             ? (priorities.get(order.id) ?? null)
