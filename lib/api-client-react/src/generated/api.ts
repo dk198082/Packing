@@ -24,9 +24,12 @@ import type {
   AuthUser,
   HealthStatus,
   LoginParams,
+  MessageRecipientsResponse,
   PackStatus,
   PackStatusInput,
   PackStatusesResponse,
+  PackedInput,
+  PackedTimestampInput,
   PackingMessage,
   PackingMessageInput,
   PackingMessagesResponse,
@@ -620,7 +623,7 @@ export const getUpdatePackStatusUrl = (orderId: string,) => {
 }
 
 /**
- * Sets or resets the shared pack-start timestamp for an order.
+ * Read and Read/Write users may Start Pack. Read users receive a server-owned start time and cannot replace an existing start time. Only Read/Write users may edit or reset timestamps.
  * @summary Update shared pack status
  */
 export const updatePackStatus = async (orderId: string,
@@ -684,6 +687,229 @@ export const useUpdatePackStatus = <TError = ErrorType<void>,
       return useMutation(getUpdatePackStatusMutationOptions(options));
     }
 
+export const getMarkOrderPackedUrl = (orderId: string,) => {
+
+
+
+
+  return `/api/pack-status/${orderId}/packed`
+}
+
+/**
+ * Stores the first completion timestamp on the server. Reprints and repeated finishes preserve it. Both Read and Read/Write users may mark Parts orders packed through label printing or manually Finish Pack on System orders.
+ * @summary Mark a Parts label print or manual System finish as packed
+ */
+export const markOrderPacked = async (orderId: string,
+    packedInput: PackedInput, options?: Parameters<typeof customFetch>[1]): Promise<PackStatus> => {
+
+  return customFetch<PackStatus>(getMarkOrderPackedUrl(orderId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(packedInput)
+  }
+);}
+
+
+
+
+
+export const getMarkOrderPackedMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markOrderPacked>>, TError,{orderId: string;data: BodyType<PackedInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markOrderPacked>>, TError,{orderId: string;data: BodyType<PackedInput>}, TContext> => {
+
+const mutationKey = ['markOrderPacked'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markOrderPacked>>, {orderId: string;data: BodyType<PackedInput>}> = (props) => {
+          const {orderId,data} = props ?? {};
+
+          return  markOrderPacked(orderId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkOrderPackedMutationResult = NonNullable<Awaited<ReturnType<typeof markOrderPacked>>>
+    export type MarkOrderPackedMutationBody = BodyType<PackedInput>
+    export type MarkOrderPackedMutationError = ErrorType<void>
+
+    /**
+ * @summary Mark a Parts label print or manual System finish as packed
+ */
+export const useMarkOrderPacked = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markOrderPacked>>, TError,{orderId: string;data: BodyType<PackedInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markOrderPacked>>,
+        TError,
+        {orderId: string;data: BodyType<PackedInput>},
+        TContext
+      > => {
+      return useMutation(getMarkOrderPackedMutationOptions(options));
+    }
+
+export const getEditOrderPackedUrl = (orderId: string,) => {
+
+
+
+
+  return `/api/pack-status/${orderId}/packed`
+}
+
+/**
+ * Both Read and Read/Write users may correct the shared packed timestamp or clear it with null. Start Pack is unchanged.
+ * @summary Edit or clear PACKED on either tab
+ */
+export const editOrderPacked = async (orderId: string,
+    packedTimestampInput: PackedTimestampInput, options?: Parameters<typeof customFetch>[1]): Promise<PackStatus> => {
+
+  return customFetch<PackStatus>(getEditOrderPackedUrl(orderId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(packedTimestampInput)
+  }
+);}
+
+
+
+
+
+export const getEditOrderPackedMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editOrderPacked>>, TError,{orderId: string;data: BodyType<PackedTimestampInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof editOrderPacked>>, TError,{orderId: string;data: BodyType<PackedTimestampInput>}, TContext> => {
+
+const mutationKey = ['editOrderPacked'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof editOrderPacked>>, {orderId: string;data: BodyType<PackedTimestampInput>}> = (props) => {
+          const {orderId,data} = props ?? {};
+
+          return  editOrderPacked(orderId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EditOrderPackedMutationResult = NonNullable<Awaited<ReturnType<typeof editOrderPacked>>>
+    export type EditOrderPackedMutationBody = BodyType<PackedTimestampInput>
+    export type EditOrderPackedMutationError = ErrorType<void>
+
+    /**
+ * @summary Edit or clear PACKED on either tab
+ */
+export const useEditOrderPacked = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editOrderPacked>>, TError,{orderId: string;data: BodyType<PackedTimestampInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof editOrderPacked>>,
+        TError,
+        {orderId: string;data: BodyType<PackedTimestampInput>},
+        TContext
+      > => {
+      return useMutation(getEditOrderPackedMutationOptions(options));
+    }
+
+export const getGetMessageRecipientsUrl = () => {
+
+
+
+
+  return `/api/messages/recipients`
+}
+
+/**
+ * @summary List previously signed-in users with current Packing Board access
+ */
+export const getMessageRecipients = async ( options?: Parameters<typeof customFetch>[1]): Promise<MessageRecipientsResponse> => {
+
+  return customFetch<MessageRecipientsResponse>(getGetMessageRecipientsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMessageRecipientsQueryKey = () => {
+    return [
+    `/api/messages/recipients`
+    ] as const;
+    }
+
+
+export const getGetMessageRecipientsQueryOptions = <TData = Awaited<ReturnType<typeof getMessageRecipients>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMessageRecipients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMessageRecipientsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMessageRecipients>>> = ({ signal }) => getMessageRecipients({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMessageRecipients>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMessageRecipientsQueryResult = NonNullable<Awaited<ReturnType<typeof getMessageRecipients>>>
+export type GetMessageRecipientsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List previously signed-in users with current Packing Board access
+ */
+
+export function useGetMessageRecipients<TData = Awaited<ReturnType<typeof getMessageRecipients>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMessageRecipients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMessageRecipientsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetPackingMessagesUrl = () => {
 
 
@@ -693,7 +919,7 @@ export const getGetPackingMessagesUrl = () => {
 }
 
 /**
- * @summary List shared messages until seven days after their first OK
+ * @summary List only messages sent or received by the signed-in user
  */
 export const getPackingMessages = async ( options?: Parameters<typeof customFetch>[1]): Promise<PackingMessagesResponse> => {
 
@@ -740,7 +966,7 @@ export type GetPackingMessagesQueryError = ErrorType<void>
 
 
 /**
- * @summary List shared messages until seven days after their first OK
+ * @summary List only messages sent or received by the signed-in user
  */
 
 export function useGetPackingMessages<TData = Awaited<ReturnType<typeof getPackingMessages>>, TError = ErrorType<void>>(
@@ -770,7 +996,7 @@ export const getCreatePackingMessageUrl = () => {
 }
 
 /**
- * @summary Post a shared message as a Read/Write user
+ * @summary Send a private message to a previously signed-in authorized user
  */
 export const createPackingMessage = async (packingMessageInput: PackingMessageInput, options?: Parameters<typeof customFetch>[1]): Promise<PackingMessage> => {
 
@@ -819,7 +1045,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreatePackingMessageMutationError = ErrorType<void>
 
     /**
- * @summary Post a shared message as a Read/Write user
+ * @summary Send a private message to a previously signed-in authorized user
  */
 export const useCreatePackingMessage = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPackingMessage>>, TError,{data: BodyType<PackingMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -841,7 +1067,7 @@ export const getAcknowledgePackingMessageUrl = (messageId: string,) => {
 }
 
 /**
- * @summary Acknowledge a message with OK; Read/Write users may also OK their own
+ * @summary Recipient acknowledges a message with OK
  */
 export const acknowledgePackingMessage = async (messageId: string, options?: Parameters<typeof customFetch>[1]): Promise<PackingMessage> => {
 
@@ -890,7 +1116,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AcknowledgePackingMessageMutationError = ErrorType<void>
 
     /**
- * @summary Acknowledge a message with OK; Read/Write users may also OK their own
+ * @summary Recipient acknowledges a message with OK
  */
 export const useAcknowledgePackingMessage = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgePackingMessage>>, TError,{messageId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -901,6 +1127,148 @@ export const useAcknowledgePackingMessage = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getAcknowledgePackingMessageMutationOptions(options));
+    }
+
+export const getResetPackingMessageUrl = (messageId: string,) => {
+
+
+
+
+  return `/api/messages/${messageId}/acknowledgments`
+}
+
+/**
+ * @summary Clear every OK and make a visible DONE message New again; Read/Write only
+ */
+export const resetPackingMessage = async (messageId: string, options?: Parameters<typeof customFetch>[1]): Promise<PackingMessage> => {
+
+  return customFetch<PackingMessage>(getResetPackingMessageUrl(messageId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getResetPackingMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPackingMessage>>, TError,{messageId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetPackingMessage>>, TError,{messageId: string}, TContext> => {
+
+const mutationKey = ['resetPackingMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetPackingMessage>>, {messageId: string}> = (props) => {
+          const {messageId} = props ?? {};
+
+          return  resetPackingMessage(messageId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetPackingMessageMutationResult = NonNullable<Awaited<ReturnType<typeof resetPackingMessage>>>
+
+    export type ResetPackingMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Clear every OK and make a visible DONE message New again; Read/Write only
+ */
+export const useResetPackingMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPackingMessage>>, TError,{messageId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resetPackingMessage>>,
+        TError,
+        {messageId: string},
+        TContext
+      > => {
+      return useMutation(getResetPackingMessageMutationOptions(options));
+    }
+
+export const getRemovePackingMessageUrl = (messageId: string,) => {
+
+
+
+
+  return `/api/messages/${messageId}`
+}
+
+/**
+ * @summary Remove a visible DONE message from everyone's board; Read/Write only
+ */
+export const removePackingMessage = async (messageId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRemovePackingMessageUrl(messageId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemovePackingMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePackingMessage>>, TError,{messageId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removePackingMessage>>, TError,{messageId: string}, TContext> => {
+
+const mutationKey = ['removePackingMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePackingMessage>>, {messageId: string}> = (props) => {
+          const {messageId} = props ?? {};
+
+          return  removePackingMessage(messageId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemovePackingMessageMutationResult = NonNullable<Awaited<ReturnType<typeof removePackingMessage>>>
+
+    export type RemovePackingMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Remove a visible DONE message from everyone's board; Read/Write only
+ */
+export const useRemovePackingMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePackingMessage>>, TError,{messageId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removePackingMessage>>,
+        TError,
+        {messageId: string},
+        TContext
+      > => {
+      return useMutation(getRemovePackingMessageMutationOptions(options));
     }
 
 export const getUpdateSystemOrderPrioritiesUrl = () => {

@@ -45,4 +45,6 @@ export interface PackingOrder {
      * @nullable
      */
   priority: number | null;
+  /** @nullable */
+  packedAt: Date | null;
 }

@@ -10,4 +10,6 @@ export interface PackStatus {
   orderId: string;
   /** @nullable */
   packStartedAt: Date | null;
+  /** @nullable */
+  packedAt: Date | null;
 }

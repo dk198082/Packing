@@ -139,7 +139,7 @@ paths:
       operationId: updatePackStatus
       tags: [packing]
       summary: Update shared pack status
-      description: Sets or resets the shared pack-start timestamp for an order.
+      description: Read and Read/Write users may Start Pack. Read users receive a server-owned start time and cannot replace an existing start time. Only Read/Write users may edit or reset timestamps.
       security:
         - cookieAuth: []
       parameters:
@@ -167,12 +167,107 @@ paths:
         "401":
           description: Login required
         "403":
-          description: Editor role required
+          description: Access denied or reset requested without Read/Write access
+  /pack-status/{orderId}/packed:
+    post:
+      operationId: markOrderPacked
+      tags: [packing]
+      summary: Mark a Parts label print or manual System finish as packed
+      description: Stores the first completion timestamp on the server. Reprints and repeated finishes preserve it. Both Read and Read/Write users may mark Parts orders packed through label printing or manually Finish Pack on System orders.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackedInput"
+      responses:
+        "200":
+          description: Shared packing status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackStatus"
+        "400":
+          description: Invalid order or completion trigger
+        "401":
+          description: Login required
+        "403":
+          description: Packing access denied
+        "404":
+          description: Order is not on the current packing board
+        "503":
+          description: Packing status could not be saved
+    put:
+      operationId: editOrderPacked
+      tags: [packing]
+      summary: Edit or clear PACKED on either tab
+      description: Both Read and Read/Write users may correct the shared packed timestamp or clear it with null. Start Pack is unchanged.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackedTimestampInput"
+      responses:
+        "200":
+          description: Updated shared packing status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackStatus"
+        "400":
+          description: Invalid order ID or timestamp
+        "401":
+          description: Login required
+        "403":
+          description: Packing access denied
+        "404":
+          description: Order is no longer on the packing board
+        "503":
+          description: Packed status could not be saved
+  /messages/recipients:
+    get:
+      operationId: getMessageRecipients
+      tags: [messages]
+      summary: List previously signed-in users with current Packing Board access
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Authorized recipients, excluding the current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageRecipientsResponse"
+        "401":
+          description: Login required
+        "403":
+          description: Read/Write access required
+        "503":
+          description: Recipient directory unavailable
   /messages:
     get:
       operationId: getPackingMessages
       tags: [messages]
-      summary: List shared messages until seven days after their first OK
+      summary: List only messages sent or received by the signed-in user
       security:
         - cookieAuth: []
       responses:
@@ -189,7 +284,7 @@ paths:
     post:
       operationId: createPackingMessage
       tags: [messages]
-      summary: Post a shared message as a Read/Write user
+      summary: Send a private message to a previously signed-in authorized user
       security:
         - cookieAuth: []
       requestBody:
@@ -217,7 +312,7 @@ paths:
     post:
       operationId: acknowledgePackingMessage
       tags: [messages]
-      summary: Acknowledge a message with OK; Read/Write users may also OK their own
+      summary: Recipient acknowledges a message with OK
       security:
         - cookieAuth: []
       parameters:
@@ -239,9 +334,70 @@ paths:
         "401":
           description: Login required
         "403":
-          description: Access denied or a Read user attempting to acknowledge their own message
+          description: Only the selected recipient may OK a directed message
         "404":
           description: Message not found
+        "503":
+          description: Message board unavailable
+    delete:
+      operationId: resetPackingMessage
+      tags: [messages]
+      summary: Clear every OK and make a visible DONE message New again; Read/Write only
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+      responses:
+        "200":
+          description: Message with all acknowledgments cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingMessage"
+        "400":
+          description: Invalid message identifier
+        "401":
+          description: Login required
+        "403":
+          description: Read/Write access required
+        "404":
+          description: Message no longer on the board
+        "409":
+          description: Message is not DONE
+        "503":
+          description: Message board unavailable
+  /messages/{messageId}:
+    delete:
+      operationId: removePackingMessage
+      tags: [messages]
+      summary: Remove a visible DONE message from everyone's board; Read/Write only
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+      responses:
+        "204":
+          description: Message removed from the shared board
+        "400":
+          description: Invalid message identifier
+        "401":
+          description: Login required
+        "403":
+          description: Read/Write access required
+        "404":
+          description: Message no longer on the board
+        "409":
+          description: Message is not DONE
         "503":
           description: Message board unavailable
   /system-order-priorities:
@@ -275,12 +431,34 @@ components:
   schemas:
     PackingMessageInput:
       type: object
-      required: [content]
+      required: [content, recipientId]
       properties:
         content:
           type: string
           minLength: 1
           maxLength: 200
+        recipientId:
+          type: string
+          minLength: 1
+          maxLength: 200
+    MessageRecipient:
+      type: object
+      required: [userId, displayName, email]
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+    MessageRecipientsResponse:
+      type: object
+      required: [recipients]
+      properties:
+        recipients:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageRecipient"
     PackingMessageAcknowledgment:
       type: object
       required: [userId, displayName, acknowledgedAt]
@@ -294,7 +472,7 @@ components:
           format: date-time
     PackingMessage:
       type: object
-      required: [id, content, authorId, authorName, createdAt, acknowledgments]
+      required: [id, content, authorId, authorName, createdAt, acknowledgments, recipientId, recipientName]
       properties:
         id:
           type: string
@@ -305,6 +483,11 @@ components:
           type: string
         authorName:
           type: string
+        recipientId:
+          type: ["string", "null"]
+          description: Null only for pre-migration messages, visible to their original sender only.
+        recipientName:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
@@ -377,6 +560,7 @@ components:
         - doNotProcessKnown
         - packStartedAt
         - priority
+        - packedAt
       properties:
         id:
           type: string
@@ -444,6 +628,9 @@ components:
           minimum: 1
           maximum: 5
           description: Automatic System rank by Ship Date, then numeric Sales Order. Null for Parts and System orders outside the Top 5.
+        packedAt:
+          type: ["string", "null"]
+          format: date-time
     PackingOrdersResponse:
       type: object
       required:
@@ -474,12 +661,30 @@ components:
       required:
         - orderId
         - packStartedAt
+        - packedAt
       properties:
         orderId:
           type: string
         packStartedAt:
           type: ["string", "null"]
           format: date-time
+        packedAt:
+          type: ["string", "null"]
+          format: date-time
+    PackedTimestampInput:
+      type: object
+      required: [packedAt]
+      properties:
+        packedAt:
+          type: ["string", "null"]
+          format: date-time
+    PackedInput:
+      type: object
+      required: [trigger]
+      properties:
+        trigger:
+          type: string
+          enum: [label, manual]
     PackStatusesResponse:
       type: object
       required:

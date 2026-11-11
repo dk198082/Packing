@@ -13,6 +13,13 @@ export interface PackingMessage {
   content: string;
   authorId: string;
   authorName: string;
+  /**
+     * Null only for pre-migration messages, visible to their original sender only.
+     * @nullable
+     */
+  recipientId: string | null;
+  /** @nullable */
+  recipientName: string | null;
   createdAt: Date;
   acknowledgments: PackingMessageAcknowledgment[];
 }

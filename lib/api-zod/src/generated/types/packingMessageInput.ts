@@ -12,4 +12,9 @@ export interface PackingMessageInput {
      * @maxLength 200
      */
   content: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  recipientId: string;
 }

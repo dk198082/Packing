@@ -11,6 +11,21 @@ export interface PackingMessageInput {
      * @maxLength 200
      */
   content: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  recipientId: string;
+}
+
+export interface MessageRecipient {
+  userId: string;
+  displayName: string;
+  email: string;
+}
+
+export interface MessageRecipientsResponse {
+  recipients: MessageRecipient[];
 }
 
 export interface PackingMessageAcknowledgment {
@@ -25,6 +40,13 @@ export interface PackingMessage {
   content: string;
   authorId: string;
   authorName: string;
+  /**
+     * Null only for pre-migration messages, visible to their original sender only.
+     * @nullable
+     */
+  recipientId: string | null;
+  /** @nullable */
+  recipientName: string | null;
   createdAt: string;
   acknowledgments: PackingMessageAcknowledgment[];
 }
@@ -98,6 +120,8 @@ export interface PackingOrder {
      * @nullable
      */
   priority: number | null;
+  /** @nullable */
+  packedAt: string | null;
 }
 
 export type PackingOrdersResponseSource = typeof PackingOrdersResponseSource[keyof typeof PackingOrdersResponseSource];
@@ -125,6 +149,25 @@ export interface PackStatus {
   orderId: string;
   /** @nullable */
   packStartedAt: string | null;
+  /** @nullable */
+  packedAt: string | null;
+}
+
+export interface PackedTimestampInput {
+  /** @nullable */
+  packedAt: string | null;
+}
+
+export type PackedInputTrigger = typeof PackedInputTrigger[keyof typeof PackedInputTrigger];
+
+
+export const PackedInputTrigger = {
+  label: 'label',
+  manual: 'manual',
+} as const;
+
+export interface PackedInput {
+  trigger: PackedInputTrigger;
 }
 
 export interface PackStatusesResponse {
