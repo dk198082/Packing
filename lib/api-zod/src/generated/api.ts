@@ -101,7 +101,8 @@ export const GetPackingOrdersResponse = zod.object({
   "doNotProcess": zod.boolean(),
   "doNotProcessKnown": zod.boolean(),
   "packStartedAt": zod.coerce.date().nullable(),
-  "priority": zod.number().min(1).max(getPackingOrdersResponseOrdersItemPriorityMax).nullable().describe('Automatic System rank by Ship Date, then numeric Sales Order. Null for Parts and System orders outside the Top 5.')
+  "priority": zod.number().min(1).max(getPackingOrdersResponseOrdersItemPriorityMax).nullable().describe('Automatic System rank by Ship Date, then numeric Sales Order. Null for Parts and System orders outside the Top 5.'),
+  "packedAt": zod.coerce.date().nullable()
 }))
 })
 
@@ -113,13 +114,14 @@ export const GetPackingOrdersResponse = zod.object({
 export const GetPackStatusesResponse = zod.object({
   "statuses": zod.array(zod.object({
   "orderId": zod.string(),
-  "packStartedAt": zod.coerce.date().nullable()
+  "packStartedAt": zod.coerce.date().nullable(),
+  "packedAt": zod.coerce.date().nullable()
 }))
 })
 
 
 /**
- * Sets or resets the shared pack-start timestamp for an order.
+ * Read and Read/Write users may Start Pack. Read users receive a server-owned start time and cannot replace an existing start time. Only Read/Write users may edit or reset timestamps.
  * @summary Update shared pack status
  */
 
@@ -135,12 +137,69 @@ export const UpdatePackStatusBody = zod.object({
 
 export const UpdatePackStatusResponse = zod.object({
   "orderId": zod.string(),
-  "packStartedAt": zod.coerce.date().nullable()
+  "packStartedAt": zod.coerce.date().nullable(),
+  "packedAt": zod.coerce.date().nullable()
 })
 
 
 /**
- * @summary List shared messages until seven days after their first OK
+ * Stores the first completion timestamp on the server. Reprints and repeated finishes preserve it. Both Read and Read/Write users may mark Parts orders packed through label printing or manually Finish Pack on System orders.
+ * @summary Mark a Parts label print or manual System finish as packed
+ */
+
+
+
+export const MarkOrderPackedParams = zod.object({
+  "orderId": zod.coerce.string().min(1)
+})
+
+export const MarkOrderPackedBody = zod.object({
+  "trigger": zod.enum(['label', 'manual'])
+})
+
+export const MarkOrderPackedResponse = zod.object({
+  "orderId": zod.string(),
+  "packStartedAt": zod.coerce.date().nullable(),
+  "packedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * Both Read and Read/Write users may correct the shared packed timestamp or clear it with null. Start Pack is unchanged.
+ * @summary Edit or clear PACKED on either tab
+ */
+
+
+
+export const EditOrderPackedParams = zod.object({
+  "orderId": zod.coerce.string().min(1)
+})
+
+export const EditOrderPackedBody = zod.object({
+  "packedAt": zod.coerce.date().nullable()
+})
+
+export const EditOrderPackedResponse = zod.object({
+  "orderId": zod.string(),
+  "packStartedAt": zod.coerce.date().nullable(),
+  "packedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary List previously signed-in users with current Packing Board access
+ */
+export const GetMessageRecipientsResponse = zod.object({
+  "recipients": zod.array(zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string()
+}))
+})
+
+
+/**
+ * @summary List only messages sent or received by the signed-in user
  */
 export const getPackingMessagesResponseMessagesItemIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
 
@@ -151,6 +210,8 @@ export const GetPackingMessagesResponse = zod.object({
   "content": zod.string(),
   "authorId": zod.string(),
   "authorName": zod.string(),
+  "recipientId": zod.string().nullable().describe('Null only for pre-migration messages, visible to their original sender only.'),
+  "recipientName": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "acknowledgments": zod.array(zod.object({
   "userId": zod.string(),
@@ -162,14 +223,17 @@ export const GetPackingMessagesResponse = zod.object({
 
 
 /**
- * @summary Post a shared message as a Read/Write user
+ * @summary Send a private message to a previously signed-in authorized user
  */
 export const createPackingMessageBodyContentMax = 200;
+
+export const createPackingMessageBodyRecipientIdMax = 200;
 
 
 
 export const CreatePackingMessageBody = zod.object({
-  "content": zod.string().min(1).max(createPackingMessageBodyContentMax)
+  "content": zod.string().min(1).max(createPackingMessageBodyContentMax),
+  "recipientId": zod.string().min(1).max(createPackingMessageBodyRecipientIdMax)
 })
 
 export const createPackingMessageResponseIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
@@ -180,6 +244,8 @@ export const CreatePackingMessageResponse = zod.object({
   "content": zod.string(),
   "authorId": zod.string(),
   "authorName": zod.string(),
+  "recipientId": zod.string().nullable().describe('Null only for pre-migration messages, visible to their original sender only.'),
+  "recipientName": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "acknowledgments": zod.array(zod.object({
   "userId": zod.string(),
@@ -190,7 +256,7 @@ export const CreatePackingMessageResponse = zod.object({
 
 
 /**
- * @summary Acknowledge a message with OK; Read/Write users may also OK their own
+ * @summary Recipient acknowledges a message with OK
  */
 export const acknowledgePackingMessagePathMessageIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
 
@@ -207,6 +273,8 @@ export const AcknowledgePackingMessageResponse = zod.object({
   "content": zod.string(),
   "authorId": zod.string(),
   "authorName": zod.string(),
+  "recipientId": zod.string().nullable().describe('Null only for pre-migration messages, visible to their original sender only.'),
+  "recipientName": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "acknowledgments": zod.array(zod.object({
   "userId": zod.string(),
@@ -214,6 +282,48 @@ export const AcknowledgePackingMessageResponse = zod.object({
   "acknowledgedAt": zod.coerce.date()
 }))
 })
+
+
+/**
+ * @summary Clear every OK and make a visible DONE message New again; Read/Write only
+ */
+export const resetPackingMessagePathMessageIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const ResetPackingMessageParams = zod.object({
+  "messageId": zod.coerce.string().regex(resetPackingMessagePathMessageIdRegExp)
+})
+
+export const resetPackingMessageResponseIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const ResetPackingMessageResponse = zod.object({
+  "id": zod.string().regex(resetPackingMessageResponseIdRegExp),
+  "content": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "recipientId": zod.string().nullable().describe('Null only for pre-migration messages, visible to their original sender only.'),
+  "recipientName": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "acknowledgments": zod.array(zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "acknowledgedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Remove a visible DONE message from everyone's board; Read/Write only
+ */
+export const removePackingMessagePathMessageIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const RemovePackingMessageParams = zod.object({
+  "messageId": zod.coerce.string().regex(removePackingMessagePathMessageIdRegExp)
+})
+
+export const RemovePackingMessageResponse = zod.void()
 
 
 /**
