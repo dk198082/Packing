@@ -23,6 +23,9 @@ export function Header({
 }: HeaderProps) {
   const { user, logout } = useAuth();
 
+const isEmbedded =
+    typeof window !== "undefined" && window.self !== window.top;
+
   return (
     <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-4 gap-y-2">
       <div className="flex items-center gap-3">
@@ -65,7 +68,7 @@ export function Header({
             SYSTEM
           </button>
         </div>
-        {!window.location.search.includes("embedded=1") && (
+        {!isEmbedded && (
         <div className="flex items-center gap-2 border-l border-border pl-3">
           <div className="max-w-40 text-right leading-tight">
             <div
