@@ -65,15 +65,21 @@ export function Header({
             SYSTEM
           </button>
         </div>
+        {!window.location.search.includes("embedded=1") && (
         <div className="flex items-center gap-2 border-l border-border pl-3">
           <div className="max-w-40 text-right leading-tight">
-            <div className="truncate text-[11px] font-semibold text-foreground" title={user.email}>
+            <div
+              className="truncate text-[11px] font-semibold text-foreground"
+              title={user.email}
+            >
               {user.displayName}
             </div>
+
             <div className="text-[9px] font-bold uppercase tracking-wider text-primary">
               {user.role}
             </div>
           </div>
+
           <button
             type="button"
             onClick={logout}
@@ -82,6 +88,7 @@ export function Header({
             Sign out
           </button>
         </div>
+        )}
       </div>
     </div>
   );
