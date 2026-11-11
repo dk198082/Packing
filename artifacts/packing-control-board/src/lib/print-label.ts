@@ -13,6 +13,7 @@ export type PrintLabelFailure =
   | 'NO_PICK_IDS'
   | 'NO_BOXES'
   | 'POPUP_BLOCKED'
+  | 'PRINT_ERROR'
   | 'QRCODE_ERROR';
 
 export type PrintLabelResult =
@@ -270,6 +271,7 @@ export async function printDymo30336Labels(
     return { ok: false, reason: 'POPUP_BLOCKED' };
   }
 
+  let labelReady = false;
   try {
     // One scanner Enter terminator after the complete comma-separated IPR list.
     const qrCodeValue = `${pickIds.join(',')}\r`;
@@ -283,22 +285,27 @@ export async function printDymo30336Labels(
     printWindow.document.open();
     printWindow.document.write(createLabelHtml(order, pickIds, labels));
     printWindow.document.close();
+    labelReady = true;
 
     const printWhenReady = async () => {
       await printWindow.document.fonts?.ready;
+      if (printWindow.closed) throw new Error('Label window was closed before printing.');
       printWindow.focus();
       printWindow.print();
     };
 
-    printWindow.requestAnimationFrame(() => {
-      printWindow.setTimeout(() => {
-        void printWhenReady();
-      }, 100);
+    // Resolve only after dispatching print, not merely after generating the QR.
+    await new Promise<void>((resolve, reject) => {
+      printWindow.requestAnimationFrame(() => {
+        printWindow.setTimeout(() => {
+          void printWhenReady().then(resolve, reject);
+        }, 100);
+      });
     });
 
     return { ok: true };
   } catch {
     printWindow.close();
-    return { ok: false, reason: 'QRCODE_ERROR' };
+    return { ok: false, reason: labelReady ? 'PRINT_ERROR' : 'QRCODE_ERROR' };
   }
 }

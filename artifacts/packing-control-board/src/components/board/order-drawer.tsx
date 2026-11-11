@@ -18,12 +18,16 @@ import {
   printDymo30336Labels,
 } from '@/lib/print-label';
 import { X, FileText, Plus, Printer, Pencil } from 'lucide-react';
+import { PackedStatusEditor } from './packed-status-editor';
 
 interface OrderDrawerProps {
   order: Order | null;
   onClose: () => void;
   onPackStartedChange: (orderId: string, packStartedAt: string | null) => Promise<string | null>;
+  onFinishPack: (orderId: string, trigger: 'label' | 'manual') => Promise<string | null>;
+  onPackedChange: (orderId: string, packedAt: string | null) => Promise<string | null>;
   canEditPackStatus: boolean;
+  canOperatePackStatus: boolean;
   now: Date;
 }
 
@@ -37,7 +41,10 @@ export function OrderDrawer({
   order,
   onClose,
   onPackStartedChange,
+  onFinishPack,
+  onPackedChange,
   canEditPackStatus,
+  canOperatePackStatus,
   now,
 }: OrderDrawerProps) {
   const [fields, setFields] = useState<OperatorFields>(EMPTY_OPERATOR_FIELDS);
@@ -46,6 +53,8 @@ export function OrderDrawer({
   const [isSavingPackStatus, setIsSavingPackStatus] = useState(false);
   const [isEditingPackStart, setIsEditingPackStart] = useState(false);
   const [packStartDraft, setPackStartDraft] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [packedRetryOrderId, setPackedRetryOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     setFields(order
@@ -87,7 +96,7 @@ export function OrderDrawer({
   };
 
   const handleStartPack = () => {
-    if (!canEditPackStatus || fields.packStartedAt || isSavingPackStatus) return;
+    if (!canOperatePackStatus || fields.packStartedAt || isSavingPackStatus) return;
     void savePackStartedAt(new Date().toISOString());
   };
 
@@ -118,6 +127,19 @@ export function OrderDrawer({
     void savePackStartedAt(null).then((saved) => {
       if (saved) handleCancelPackStartEdit();
     });
+  };
+
+  const handleFinishPack = async () => {
+    if (!canOperatePackStatus || order.team !== 'SYSTEM' || order.packedAt || isSavingPackStatus) return;
+    setPackStatusError('');
+    setIsSavingPackStatus(true);
+    try {
+      await onFinishPack(order.id, 'manual');
+    } catch {
+      setPackStatusError('PACKED could not be saved. Please try Finish Pack again.');
+    } finally {
+      setIsSavingPackStatus(false);
+    }
   };
 
   const addPickId = () => {
@@ -190,10 +212,22 @@ export function OrderDrawer({
       })
     : null;
 
-  const handlePrintLabel = () => {
-    void printDymo30336Labels(order, fields.pickIds, fields.boxes).then((result) => {
+  const handlePrintLabel = async () => {
+    if (isPrinting) return;
+    setIsPrinting(true);
+    try {
+      const result = await printDymo30336Labels(order, fields.pickIds, fields.boxes);
       if (result.ok) {
         setPrintError('');
+        if (order.team === 'PARTS') {
+          try {
+            await onFinishPack(order.id, 'label');
+            setPackedRetryOrderId(null);
+          } catch {
+            setPrintError('Label sent to print, but PACKED was not saved. Use Retry PACKED below; you do not need to reprint.');
+            setPackedRetryOrderId(order.id);
+          }
+        }
         return;
       }
 
@@ -202,9 +236,26 @@ export function OrderDrawer({
         NO_BOXES: 'Enter at least one Box # or weight before printing.',
         POPUP_BLOCKED: 'Allow pop-ups for this site, then try again.',
         QRCODE_ERROR: 'The QR code could not be generated. Please try again.',
+        PRINT_ERROR: 'The label could not be sent to print. Please try again; PACKED has not been recorded.',
       };
       setPrintError(messages[result.reason]);
-    });
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  const handleRetryPacked = async () => {
+    if (packedRetryOrderId !== order.id || isPrinting) return;
+    setIsPrinting(true);
+    try {
+      await onFinishPack(order.id, 'label');
+      setPackedRetryOrderId(null);
+      setPrintError('');
+    } catch {
+      setPrintError('PACKED was not saved. Please retry.');
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   return (
@@ -267,6 +318,20 @@ export function OrderDrawer({
           <div className="flex flex-col gap-3 border-t border-border pt-4">
             <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground">OPERATOR ENTRY</h3>
 
+            <PackedStatusEditor
+              packedAt={order.packedAt}
+              canOperate={canOperatePackStatus}
+              disabled={isSavingPackStatus || isPrinting}
+              onChange={async packedAt => {
+                setIsSavingPackStatus(true);
+                try {
+                  return await onPackedChange(order.id, packedAt);
+                } finally {
+                  setIsSavingPackStatus(false);
+                }
+              }}
+            />
+
             {order.team === 'SYSTEM' && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-primary/40 bg-primary/5 px-3 py-2">
                 <div className="min-w-0">
@@ -325,7 +390,7 @@ export function OrderDrawer({
                     <div className="text-xs text-muted-foreground">Not started</div>
                   )}
                 </div>
-                {canEditPackStatus && !packStartedLabel && !isEditingPackStart && (
+                {canOperatePackStatus && !order.packedAt && !packStartedLabel && !isEditingPackStart && (
                   <button
                     type="button"
                     onClick={handleStartPack}
@@ -335,9 +400,20 @@ export function OrderDrawer({
                      Start pack
                   </button>
                 )}
-                {!canEditPackStatus && (
+                {canOperatePackStatus && !order.packedAt && !isEditingPackStart && (
+                  <button
+                    type="button"
+                    onClick={() => void handleFinishPack()}
+                    disabled={isSavingPackStatus}
+                    className="shrink-0 rounded-sm border border-ready bg-ready/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-ready hover:bg-ready/20 disabled:opacity-50"
+                    data-testid="button-finish-pack"
+                  >
+                    {isSavingPackStatus ? 'Saving…' : 'FINISH PACK'}
+                  </button>
+                )}
+                {!canOperatePackStatus && (
                   <div className="basis-full text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Viewer access · status is read-only
+                    Packing access is required to start or finish packing.
                   </div>
                 )}
                 {packStatusError && (
@@ -501,10 +577,15 @@ export function OrderDrawer({
               {printError}
             </p>
           )}
+          {order.team === 'PARTS' && packedRetryOrderId === order.id && !order.packedAt && (
+            <button type="button" onClick={() => void handleRetryPacked()} disabled={isPrinting} className="mb-2 w-full rounded-sm border border-attention px-2 py-1 text-xs font-bold text-attention disabled:opacity-50" data-testid="button-retry-packed">
+              {isPrinting ? 'Saving…' : 'Retry PACKED'}
+            </button>
+          )}
           <button
             type="button"
             onClick={handlePrintLabel}
-            disabled={hasInvalidPickIds || printablePickIds.length === 0 || printableBoxes.length === 0}
+            disabled={isPrinting || hasInvalidPickIds || printablePickIds.length === 0 || printableBoxes.length === 0}
             title={
               hasInvalidPickIds || printablePickIds.length === 0
                 ? 'Enter exactly 6 digits in each IPR before printing'
@@ -514,7 +595,7 @@ export function OrderDrawer({
             }
             className="w-full py-3 border border-primary text-primary font-bold tracking-widest text-sm hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center gap-2 rounded-sm group disabled:cursor-not-allowed disabled:border-muted-foreground/40 disabled:text-muted-foreground disabled:hover:bg-transparent"
           >
-            PRINT LABEL <Printer className="w-3.5 h-3.5 group-hover:scale-105 transition-transform" />
+            {isPrinting ? 'PRINTING / SAVING…' : 'PRINT LABEL'} <Printer className="w-3.5 h-3.5 group-hover:scale-105 transition-transform" />
           </button>
           <div className="mt-1.5 text-center text-[9px] font-mono text-muted-foreground">
             DYMO 30336 · 2⅛″ × 1″ · QR CODE

@@ -41,6 +41,11 @@ export function OrderCard({
               ECOMM
             </span>
           )}
+          {order.packedAt && (
+            <span className="shrink-0 rounded-sm border border-ready/60 bg-ready/10 px-1 py-0.5 text-[10px] font-bold text-ready" title={`Packed ${new Date(order.packedAt).toLocaleString()}`} data-testid={`packed-card-${order.id}`}>
+              PACKED
+            </span>
+          )}
           {order.doNotProcess && (
             <HoldIndicator />
           )}

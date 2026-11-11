@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   getPackingOrders,
   updatePackStatus,
+  markOrderPacked,
+  editOrderPacked,
   type PackingOrder,
 } from '@workspace/api-client-react';
 import type { Order, Team, ViewMode } from '@/lib/types';
@@ -18,7 +20,7 @@ function toOrder(order: PackingOrder): Order {
   return order;
 }
 
-export function useOrders(canEditPackStatus: boolean) {
+export function useOrders(canEditPackStatus: boolean, canOperatePackStatus: boolean) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(LIVE_DATA_ACCESS_ENABLED);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -32,6 +34,7 @@ export function useOrders(canEditPackStatus: boolean) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const refreshInFlight = useRef(false);
   const refreshQueued = useRef(false);
+  const statusRevision = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!LIVE_DATA_ACCESS_ENABLED) return;
@@ -42,6 +45,7 @@ export function useOrders(canEditPackStatus: boolean) {
 
     refreshInFlight.current = true;
     setIsRefreshing(true);
+    const revision = statusRevision.current;
     try {
       const result = await getPackingOrders();
       const mappedOrders = result.orders.map(toOrder);
@@ -70,7 +74,9 @@ export function useOrders(canEditPackStatus: boolean) {
           }
         }),
       );
-      setOrders(ordersWithMigratedPackStatus);
+      // Don't overwrite a just-saved completion with an older in-flight refresh.
+      if (revision === statusRevision.current) setOrders(ordersWithMigratedPackStatus);
+      else refreshQueued.current = true;
       setLastUpdated(new Date(result.fetchedAt));
       setLoadError(null);
       setAccessRestricted(false);
@@ -118,17 +124,38 @@ export function useOrders(canEditPackStatus: boolean) {
     orderId: string,
     packStartedAt: string | null,
   ) => {
-    if (!canEditPackStatus) {
-      throw new Error('Editor access is required to change Pack Started status.');
+    if (!canOperatePackStatus || (!canEditPackStatus && packStartedAt === null)) {
+      throw new Error('You do not have permission to change this pack status.');
     }
     const status = await updatePackStatus(orderId, { packStartedAt });
+    statusRevision.current++;
     setOrders((currentOrders) => currentOrders.map((order) => (
       order.id === status.orderId
         ? { ...order, packStartedAt: status.packStartedAt }
         : order
     )));
     return status.packStartedAt;
-  }, [canEditPackStatus]);
+  }, [canEditPackStatus, canOperatePackStatus]);
+
+  const finishPack = useCallback(async (orderId: string, trigger: 'label' | 'manual') => {
+    if (!canOperatePackStatus) throw new Error('Packing access is required to Finish Pack.');
+    const status = await markOrderPacked(orderId, { trigger });
+    statusRevision.current++;
+    setOrders(current => current.map(order => order.id === status.orderId
+      ? { ...order, packStartedAt: status.packStartedAt, packedAt: status.packedAt }
+      : order));
+    return status.packedAt;
+  }, [canOperatePackStatus]);
+
+  const updatePackedAt = useCallback(async (orderId: string, packedAt: string | null) => {
+    if (!canOperatePackStatus) throw new Error('Packing access is required to change PACKED.');
+    const status = await editOrderPacked(orderId, { packedAt });
+    statusRevision.current++;
+    setOrders(current => current.map(order => order.id === status.orderId
+      ? { ...order, packStartedAt: status.packStartedAt, packedAt: status.packedAt }
+      : order));
+    return status.packedAt;
+  }, [canOperatePackStatus]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
@@ -192,6 +219,8 @@ export function useOrders(canEditPackStatus: boolean) {
     selectedOrderId,
     setSelectedOrderId,
     updatePackStartedAt,
+    finishPack,
+    updatePackedAt,
     kpis
   };
 }

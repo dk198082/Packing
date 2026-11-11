@@ -1,5 +1,6 @@
 import type { ViewMode } from '@/lib/types';
 import { LayoutGrid, List, Search } from 'lucide-react';
+import { MessagesCenter } from '@/components/messages/messages-center';
 
 interface FilterBarProps {
   searchTerm: string;
@@ -12,7 +13,7 @@ export function FilterBar({ searchTerm, setSearchTerm, viewMode, setViewMode }: 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs font-mono">
       <div className="flex min-w-0 items-center gap-2">
-        <label htmlFor="order-search" className="text-muted-foreground shrink-0">Search by:</label>
+        <MessagesCenter />
         <div className="relative w-[220px] max-w-[28vw] min-w-[150px]">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           <input

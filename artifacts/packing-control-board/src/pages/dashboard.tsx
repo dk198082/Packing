@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useOrders } from '@/store/use-orders';
 import { Header } from '@/components/layout/header';
-import { MessageBoard } from '@/components/messages/message-board';
 import { BoardView } from '@/components/board/board-view';
 import { OrderTable } from '@/components/board/order-table';
 import { OrderDrawer } from '@/components/board/order-drawer';
@@ -11,6 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 export function Dashboard() {
   const { user } = useAuth();
   const canEditPackStatus = user.role === 'editor';
+  const canOperatePackStatus = user.role === 'editor' || user.role === 'viewer';
   const [nowMs, setNowMs] = useState(() => Date.now());
   const now = new Date(nowMs);
 
@@ -36,8 +36,10 @@ export function Dashboard() {
     setViewMode,
     selectedOrderId,
     setSelectedOrderId,
-    updatePackStartedAt
-  } = useOrders(canEditPackStatus);
+    updatePackStartedAt,
+    finishPack,
+    updatePackedAt
+  } = useOrders(canEditPackStatus, canOperatePackStatus);
 
   const selectedOrder = rawOrders.find(o => o.id === selectedOrderId) || null;
 
@@ -52,7 +54,6 @@ export function Dashboard() {
         setViewMode={setViewMode}
       />
       
-      <MessageBoard />
       
       <div className="flex-1 flex flex-col min-h-0">
         {loadError && rawOrders.length > 0 && (
@@ -94,10 +95,14 @@ export function Dashboard() {
       </div>
 
       <OrderDrawer 
+        key={selectedOrder?.id ?? 'no-order'}
         order={selectedOrder} 
         onClose={() => setSelectedOrderId(null)} 
         onPackStartedChange={updatePackStartedAt}
+        onFinishPack={finishPack}
+        onPackedChange={updatePackedAt}
         canEditPackStatus={canEditPackStatus}
+        canOperatePackStatus={canOperatePackStatus}
         now={now}
       />
     </div>

@@ -33,5 +33,6 @@ export interface Order {
   doNotProcess: boolean;
   doNotProcessKnown: boolean;
   packStartedAt: string | null;
+  packedAt: string | null;
   priority: number | null;
 }

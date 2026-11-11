@@ -21,7 +21,7 @@ export function OrderTable({ orders, onRowClick, team, now }: OrderTableProps) {
     </div>
   );
 
-  const showPackStatus = team === 'SYSTEM';
+  const showPackStatus = true;
   const showPriority = team === 'SYSTEM';
 
   return (
@@ -102,8 +102,8 @@ export function OrderTable({ orders, onRowClick, team, now }: OrderTableProps) {
                   {formatWorkDaysInPacking(o.inPackingAt, now)}
                 </td>
                 {showPackStatus && (
-                  <td className={`py-3 px-4 font-medium ${packStartedAt ? 'text-ready' : 'text-muted-foreground'}`}>
-                    {packStartedAt ? `Started ${formatPackStartDay(packStartedAt)}` : 'Not Started'}
+                  <td className={`py-3 px-4 font-medium ${o.packedAt || packStartedAt ? 'text-ready' : 'text-muted-foreground'}`} data-testid={`packed-table-${o.id}`} title={o.packedAt ? `Packed ${new Date(o.packedAt).toLocaleString()}` : undefined}>
+                    {o.packedAt ? 'PACKED' : team === 'SYSTEM' ? packStartedAt ? `Started ${formatPackStartDay(packStartedAt)}` : 'Not Started' : 'Not Packed'}
                   </td>
                 )}
                 <td className="py-3 px-4 text-muted-foreground">{o.carrierForwarderDescription || o.carrierForwarder || 'TBA'}</td>
